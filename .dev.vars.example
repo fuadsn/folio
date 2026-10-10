@@ -1,0 +1,12 @@
+# Copy this to .dev.vars (ignored by Git). Configure ONE generation provider.
+GEMINI_API_KEY=
+GEMINI_MODEL=gemini-3.8-flash
+OPENAI_API_KEY=
+OPENAI_MODEL=gpt-4o-mini
+
+# Optional: a Stripe one-time Price for a pack of 10 Worldfolio credits.
+# Use test credentials for the hackathon. Credits are only granted by a
+# verified checkout.session.completed webhook, never by the redirect.
+STRIPE_SECRET_KEY=
+STRIPE_PRICE_ID=
+STRIPE_WEBHOOK_SECRET=
