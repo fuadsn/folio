@@ -404,6 +404,14 @@ export default function Studio() {
       (category === "All" || x.category === category) &&
       x.name.toLowerCase().includes(search.toLowerCase()),
   );
+  // Reflect the actual saved snapshot in the same render as an edit, not one
+  // effect later. An older in-flight write must not mark a newer draft saved.
+  const saveStatus =
+    JSON.stringify(world) === savedJson
+      ? "Saved"
+      : status === "Save failed" || status === "Saving…"
+        ? status
+        : "Unsaved";
   return (
     <main className={`studio ${playing ? "is-playing" : ""}`}>
       <header className="topbar">
@@ -422,18 +430,18 @@ export default function Studio() {
         </div>
         <div className="top-actions">
           <button
-            className={`save-status ${status === "Save failed" ? "failed" : ""}`}
+            className={`save-status ${saveStatus === "Save failed" ? "failed" : ""}`}
             onClick={() => save().catch((e) => notify(e.message))}
             title="Save world"
           >
-            {status === "Saving…" ? (
+            {saveStatus === "Saving…" ? (
               <Loader2 size={14} className="spin" />
-            ) : status === "Saved" ? (
+            ) : saveStatus === "Saved" ? (
               <Cloud size={15} />
             ) : (
               <Save size={14} />
             )}
-            <span>{status}</span>
+            <span>{saveStatus}</span>
           </button>
           <button
             className="button preview"

@@ -96,13 +96,11 @@ test("edit, undo, upload, back up, publish a snapshot, and unpublish", async ({
         },
       ],
     });
-    await page
-      .locator('input[type="file"][accept=".json"]')
-      .setInputFiles({
-        name: "world.json",
-        mimeType: "application/json",
-        buffer: Buffer.from(JSON.stringify(savedWorld)),
-      });
+    await page.locator('input[type="file"][accept=".json"]').setInputFiles({
+      name: "world.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(savedWorld)),
+    });
     await page.getByRole("button", { name: "Objects", exact: true }).click();
     await page
       .locator(".object-list")
@@ -116,13 +114,11 @@ test("edit, undo, upload, back up, publish a snapshot, and unpublish", async ({
     await expect(page.locator(".parts-editor summary")).toHaveCount(2);
     await page.screenshot({ path: "test-results/custom-building.png" });
     await page.getByRole("button", { name: "Build", exact: true }).click();
-    await page
-      .locator('input[type="file"][accept=".glb"]')
-      .setInputFiles({
-        name: "triangle.glb",
-        mimeType: "model/gltf-binary",
-        buffer: triangleGlb(),
-      });
+    await page.locator('input[type="file"][accept=".glb"]').setInputFiles({
+      name: "triangle.glb",
+      mimeType: "model/gltf-binary",
+      buffer: triangleGlb(),
+    });
     await expect(page.getByLabel("Object name", { exact: true })).toHaveValue(
       "triangle",
     );
@@ -272,6 +268,60 @@ test("missing credentials never charge credits or simulate generation", async ({
   expect(after.creations).toEqual(before.creations);
   if (!before.checkout)
     expect((await page.request.post("/api/checkout")).status()).toBe(503);
+});
+
+test("Saved always refers to the latest draft, including an edit during a write", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "World", exact: true }).click();
+  const original = await page
+    .getByLabel("World name", { exact: true })
+    .inputValue();
+  let releaseWrite!: () => void;
+  const writeGate = new Promise<void>((resolve) => {
+    releaseWrite = resolve;
+  });
+  let interceptFirst = true;
+  await page.route("**/api/world", async (route) => {
+    if (route.request().method() === "PUT" && interceptFirst) {
+      interceptFirst = false;
+      await writeGate;
+    }
+    await route.continue();
+  });
+  try {
+    await page
+      .getByLabel("World name", { exact: true })
+      .fill("First pending draft");
+    await expect(
+      page.getByRole("button", { name: "Saved", exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Saving…", exact: true }),
+    ).toBeVisible();
+    await page
+      .getByLabel("World name", { exact: true })
+      .fill("Latest draft must survive");
+    releaseWrite();
+    await page.getByRole("button", { name: "Saved", exact: true }).waitFor();
+    await page.reload();
+    await page.getByRole("button", { name: "World", exact: true }).click();
+    await expect(page.getByLabel("World name", { exact: true })).toHaveValue(
+      "Latest draft must survive",
+    );
+    await page
+      .getByRole("button", { name: "Start with an empty landscape" })
+      .click();
+    await page.getByRole("button", { name: "Clear draft objects" }).click();
+    await expect(page.locator(".stage-bottom")).toContainText("0 objects");
+    await page.getByRole("button", { name: "Undo", exact: true }).click();
+    await expect(page.locator(".stage-bottom")).not.toContainText("0 objects");
+  } finally {
+    releaseWrite();
+    await page.getByLabel("World name", { exact: true }).fill(original);
+    await page.getByRole("button", { name: "Saved", exact: true }).waitFor();
+  }
 });
 
 function triangleGlb() {
