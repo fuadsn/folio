@@ -1,6 +1,12 @@
 import { z } from "zod";
-import { terrainSchema, weatherSchema, characterSchema } from "./terrain";
+import {
+  terrainSchema,
+  weatherSchema,
+  characterSchema,
+  resizeTerrain,
+} from "./terrain";
 import { vehicleSchema, isVehicle } from "./vehicles";
+import { DRIVING_WORLD_SIZE, WORLD_POSITION_LIMIT } from "./world-size";
 
 export const ROLES = ["none", "about", "project", "resume", "contact"] as const;
 export type Role = (typeof ROLES)[number];
@@ -208,7 +214,11 @@ export const CATALOG = [
   },
 ] as const;
 export type Kind = (typeof CATALOG)[number]["kind"] | "custom";
-const bounded = z.number().finite().min(-24).max(24);
+const bounded = z
+  .number()
+  .finite()
+  .min(-WORLD_POSITION_LIMIT)
+  .max(WORLD_POSITION_LIMIT);
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 export const partSchema = z.object({
   name: z.string().max(60),
@@ -408,7 +418,11 @@ export function starterWorld(): World {
     ground: "#a9ba94",
     water: "#8ebec4",
     lighting: "day",
-    terrain: terrainSchema.parse({}),
+    terrain: resizeTerrain(
+      terrainSchema.parse({}),
+      DRIVING_WORLD_SIZE,
+      DRIVING_WORLD_SIZE,
+    ),
     weather: weatherSchema.parse({}),
     character: characterSchema.parse({}),
     objects,

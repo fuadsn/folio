@@ -1,7 +1,9 @@
 import { z } from "zod";
+import { MAX_WORLD_SIZE } from "./world-size";
 
 export const TERRAIN_SEGMENTS = 32;
 export const TERRAIN_POINTS = (TERRAIN_SEGMENTS + 1) ** 2;
+const gridLengths = [32, 64, 128, 256].map((n) => (n + 1) ** 2);
 const color = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 export const biomeIds = [
   "meadow",
@@ -11,21 +13,34 @@ export const biomeIds = [
   "volcanic",
 ] as const;
 export const weatherIds = ["clear", "snow", "rain", "fog"] as const;
-export const terrainSchema = z.object({
-  biome: z.enum(biomeIds).default("meadow"),
-  width: z.number().min(16).max(48).default(31),
-  depth: z.number().min(16).max(48).default(28),
-  waterLevel: z.number().min(-3).max(2).default(-1.6),
-  paths: z.boolean().default(true),
-  heights: z
-    .array(z.number().finite().min(-3).max(10))
-    .length(TERRAIN_POINTS)
-    .default(() => Array(TERRAIN_POINTS).fill(0)),
-  paint: z
-    .array(color.nullable())
-    .length(TERRAIN_POINTS)
-    .default(() => Array(TERRAIN_POINTS).fill(null)),
-});
+export const terrainSchema = z
+  .object({
+    biome: z.enum(biomeIds).default("meadow"),
+    width: z.number().min(16).max(MAX_WORLD_SIZE).default(31),
+    depth: z.number().min(16).max(MAX_WORLD_SIZE).default(28),
+    waterLevel: z.number().min(-3).max(2).default(-1.6),
+    paths: z.boolean().default(true),
+    heights: z
+      .array(z.number().finite().min(-3).max(10))
+      .max(257 ** 2)
+      .refine(
+        (values) => gridLengths.includes(values.length),
+        "Unsupported terrain grid",
+      )
+      .default(() => Array(TERRAIN_POINTS).fill(0)),
+    paint: z
+      .array(color.nullable())
+      .max(257 ** 2)
+      .default(() => Array(TERRAIN_POINTS).fill(null)),
+  })
+  .superRefine((terrain, ctx) => {
+    if (terrain.paint.length !== terrain.heights.length)
+      ctx.addIssue({
+        code: "custom",
+        path: ["paint"],
+        message: "Paint and height grids must match",
+      });
+  });
 export const weatherSchema = z
   .object({
     type: z.enum(weatherIds).default("clear"),
@@ -41,7 +56,16 @@ export const characterSchema = z
     hatStyle: z.enum(["beanie", "cap", "none"]).default("beanie"),
     speed: z.number().min(2).max(7).default(4.5),
     spawn: z
-      .tuple([z.number().min(-23).max(23), z.number().min(-23).max(23)])
+      .tuple([
+        z
+          .number()
+          .min(-MAX_WORLD_SIZE / 2)
+          .max(MAX_WORLD_SIZE / 2),
+        z
+          .number()
+          .min(-MAX_WORLD_SIZE / 2)
+          .max(MAX_WORLD_SIZE / 2),
+      ])
       .default([0, 6]),
   })
   .default({});
@@ -109,8 +133,19 @@ export const BIOMES = [
   },
 ] as const;
 
+export function terrainSegments(terrain: Terrain) {
+  return Math.sqrt(terrain.heights.length) - 1;
+}
+
+function segmentsForSize(width: number, depth: number) {
+  return Math.min(
+    256,
+    Math.max(32, 2 ** Math.ceil(Math.log2(Math.max(width, depth) / 2))),
+  );
+}
+
 export function terrainHeight(terrain: Terrain, x: number, z: number): number {
-  const n = TERRAIN_SEGMENTS;
+  const n = terrainSegments(terrain);
   const gx = Math.max(0, Math.min(n, (x / terrain.width + 0.5) * n));
   const gz = Math.max(0, Math.min(n, (z / terrain.depth + 0.5) * n));
   const ix = Math.min(n - 1, Math.floor(gx)),
@@ -128,9 +163,10 @@ export function terrainHeight(terrain: Terrain, x: number, z: number): number {
 }
 
 export function createTerrain(biome: Biome, width = 36, depth = 32): Terrain {
-  const heights = Array.from({ length: TERRAIN_POINTS }, (_, i) => {
-    const x = ((i % 33) / 32 - 0.5) * width;
-    const z = (Math.floor(i / 33) / 32 - 0.5) * depth;
+  const n = segmentsForSize(width, depth);
+  const heights = Array.from({ length: (n + 1) ** 2 }, (_, i) => {
+    const x = ((i % (n + 1)) / n - 0.5) * width;
+    const z = (Math.floor(i / (n + 1)) / n - 0.5) * depth;
     // Leave a gentle central village area; the perimeter gives each biome its silhouette.
     const edge = Math.max(
       0,
@@ -158,8 +194,46 @@ export function createTerrain(biome: Biome, width = 36, depth = 32): Terrain {
     width,
     depth,
     heights,
+    paint: Array(heights.length).fill(null),
     paths: biome === "meadow",
   });
+}
+
+/** Expand around the existing village, not by stretching its objects or hills.
+ * Heights/paint are resampled at world coordinates; Undo retains the exact old grid.
+ */
+export function resizeTerrain(
+  terrain: Terrain,
+  width: number,
+  depth: number,
+): Terrain {
+  width = Math.max(16, Math.min(MAX_WORLD_SIZE, width));
+  depth = Math.max(16, Math.min(MAX_WORLD_SIZE, depth));
+  if (width === terrain.width && depth === terrain.depth) return terrain;
+  const n = segmentsForSize(width, depth),
+    oldN = terrainSegments(terrain);
+  const heights: number[] = [],
+    paint: (string | null)[] = [];
+  for (let row = 0; row <= n; row++)
+    for (let col = 0; col <= n; col++) {
+      const x = (col / n - 0.5) * width,
+        z = (row / n - 0.5) * depth;
+      const dx = Math.max(0, Math.abs(x) - terrain.width / 2);
+      const dz = Math.max(0, Math.abs(z) - terrain.depth / 2);
+      const blend = Math.min(1, Math.hypot(dx, dz) / 16);
+      const border = terrainHeight(terrain, x, z);
+      heights.push(
+        Math.round(
+          (border * (1 - blend) +
+            Math.max(0, terrain.waterLevel + 0.25) * blend) *
+            1000,
+        ) / 1000,
+      );
+      const ix = Math.round((x / terrain.width + 0.5) * oldN);
+      const iz = Math.round((z / terrain.depth + 0.5) * oldN);
+      paint.push(dx || dz ? null : terrain.paint[iz * (oldN + 1) + ix]);
+    }
+  return { ...terrain, width, depth, heights, paint };
 }
 
 export function sculptTerrain(
@@ -170,13 +244,14 @@ export function sculptTerrain(
 ): Terrain {
   const heights = [...terrain.heights],
     paint = [...terrain.paint];
-  for (let row = 0; row <= 32; row++)
-    for (let col = 0; col <= 32; col++) {
-      const px = (col / 32 - 0.5) * terrain.width,
-        pz = (row / 32 - 0.5) * terrain.depth;
+  const n = terrainSegments(terrain);
+  for (let row = 0; row <= n; row++)
+    for (let col = 0; col <= n; col++) {
+      const px = (col / n - 0.5) * terrain.width,
+        pz = (row / n - 0.5) * terrain.depth;
       const distance = Math.hypot(px - x, pz - z);
       if (distance > brush.radius) continue;
-      const i = row * 33 + col;
+      const i = row * (n + 1) + col;
       const falloff = Math.pow(1 - distance / brush.radius, 1.5);
       const amount = brush.strength * falloff;
       if (brush.tool === "paint") {
@@ -192,9 +267,9 @@ export function sculptTerrain(
           count = 0;
         for (let dz = -1; dz <= 1; dz++)
           for (let dx = -1; dx <= 1; dx++) {
-            if (row + dz < 0 || row + dz > 32 || col + dx < 0 || col + dx > 32)
+            if (row + dz < 0 || row + dz > n || col + dx < 0 || col + dx > n)
               continue;
-            sum += terrain.heights[(row + dz) * 33 + col + dx];
+            sum += terrain.heights[(row + dz) * (n + 1) + col + dx];
             count++;
           }
         heights[i] += (sum / count - heights[i]) * Math.min(1, amount * 2);

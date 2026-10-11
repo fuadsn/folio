@@ -1,5 +1,8 @@
 # Worldfolio development preferences
 
+- Commit each completed, tested feature/fix from now on, using its real timestamp.
+  Push checkpoints to the authorized `fuadsn/folio` remote without force-pushing.
+
 - The user explicitly wants localhost-only development. Do not create, publish,
   redeploy, or sync source to a hosted Site unless they explicitly request it.
 - Run the app with `npm run dev` here or in the parent `hackathon` directory.

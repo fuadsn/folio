@@ -1,11 +1,12 @@
 import * as T from "three";
 import {
   BIOMES,
-  TERRAIN_SEGMENTS,
+  terrainSegments,
   terrainHeight,
   type Terrain,
 } from "./terrain";
 import type { World } from "./world";
+import { travelLimit } from "./world-size";
 
 export function landscape(world: World) {
   const group = new T.Group();
@@ -13,8 +14,8 @@ export function landscape(world: World) {
   const geometry = new T.PlaneGeometry(
     t.width,
     t.depth,
-    TERRAIN_SEGMENTS,
-    TERRAIN_SEGMENTS,
+    terrainSegments(t),
+    terrainSegments(t),
   );
   geometry.rotateX(-Math.PI / 2);
   geometry.setAttribute(
@@ -47,7 +48,7 @@ export function landscape(world: World) {
   skirt.receiveShadow = true;
   group.add(skirt);
   const sea = new T.Mesh(
-    new T.PlaneGeometry(240, 240),
+    new T.PlaneGeometry((travelLimit(t) + 160) * 2, (travelLimit(t) + 160) * 2),
     new T.MeshStandardMaterial({
       color: world.water,
       roughness: 0.38,
@@ -78,11 +79,17 @@ export function updateLandscape(
       z = positions.getZ(i),
       h = t.heights[i];
     positions.setY(i, h);
+    const roadWidth = Math.max(t.width, t.depth) > 64 ? 3.5 : 1.25;
+    const loop = Math.abs(
+      Math.hypot(x / (t.width * 0.32), z / (t.depth * 0.32)) - 1,
+    );
     const isPath =
       t.paths &&
-      ((Math.abs(x) < 1.25 && Math.abs(z) < t.depth * 0.44) ||
-        (Math.abs(z - 0.3) < 1.2 && Math.abs(x) < t.width * 0.34) ||
-        Math.hypot(x, z - 0.3) < 3);
+      ((Math.abs(x) < roadWidth && Math.abs(z) < t.depth * 0.44) ||
+        (Math.abs(z - 0.3) < roadWidth && Math.abs(x) < t.width * 0.34) ||
+        Math.hypot(x, z - 0.3) < roadWidth * 2 ||
+        (Math.min(t.width, t.depth) >= 96 &&
+          loop < roadWidth / (Math.min(t.width, t.depth) * 0.32)));
     if (t.paint[i]) paint.set(t.paint[i]!);
     else if (isPath) paint.copy(path);
     else
@@ -98,7 +105,7 @@ export function updateLandscape(
   ground.geometry.computeBoundingSphere();
   ground.geometry.computeBoundingBox();
   const vertices: number[] = [];
-  const s = TERRAIN_SEGMENTS,
+  const s = terrainSegments(t),
     stride = s + 1;
   const edges = [
     Array.from({ length: stride }, (_, i) => i),

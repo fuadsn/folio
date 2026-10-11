@@ -16,9 +16,11 @@ import type { World } from "../lib/world";
 import {
   BIOMES,
   createTerrain,
+  resizeTerrain,
   type TerrainBrush,
   type Weather,
 } from "../lib/terrain";
+import { DRIVING_WORLD_SIZE, MAX_WORLD_SIZE } from "../lib/world-size";
 
 export function EnvironmentEditor({
   world,
@@ -52,6 +54,36 @@ export function EnvironmentEditor({
         <p>Sculpt, paint, and change the atmosphere.</p>
       </div>
       <div className="field-stack environment-fields">
+        <div className="tool-note">
+          <b>
+            {terrain.width} × {terrain.depth} m
+          </b>{" "}
+          · {(terrain.width * terrain.depth).toLocaleString()} m² to explore
+          <p>
+            Keep your village in place and add open land around it for longer
+            drives.
+          </p>
+          <button
+            className="button primary full"
+            disabled={
+              terrain.width >= DRIVING_WORLD_SIZE &&
+              terrain.depth >= DRIVING_WORLD_SIZE
+            }
+            onClick={() => {
+              setBrush(null);
+              onChange({
+                ...world,
+                terrain: resizeTerrain(
+                  terrain,
+                  Math.max(DRIVING_WORLD_SIZE, terrain.width),
+                  Math.max(DRIVING_WORLD_SIZE, terrain.depth),
+                ),
+              });
+            }}
+          >
+            Expand for driving · 256 m
+          </button>
+        </div>
         <div className="section-label">01 / CHOOSE A STARTING POINT</div>
         <div className="biome-grid">
           {BIOMES.map((biome) => (
@@ -128,7 +160,10 @@ export function EnvironmentEditor({
                 aria-label="Brush radius"
                 type="range"
                 min="1"
-                max="6"
+                max={Math.max(
+                  6,
+                  Math.min(40, Math.max(terrain.width, terrain.depth) / 8),
+                )}
                 step=".25"
                 value={b.radius}
                 onChange={(e) => setBrush({ ...b, radius: +e.target.value })}
@@ -212,18 +247,27 @@ export function EnvironmentEditor({
                   aria-label={`Island ${key}`}
                   type="range"
                   min="16"
-                  max="48"
+                  max={MAX_WORLD_SIZE}
                   step="1"
                   value={terrain[key]}
                   onChange={(e) =>
                     onChange({
                       ...world,
-                      terrain: { ...terrain, [key]: +e.target.value },
+                      terrain: resizeTerrain(
+                        terrain,
+                        key === "width" ? +e.target.value : terrain.width,
+                        key === "depth" ? +e.target.value : terrain.depth,
+                      ),
                     })
                   }
                 />
               </label>
             ))}
+            <p className="fineprint">
+              Up to 512 × 512 m. Resizing resamples terrain and paint without
+              moving objects. Shrinking crops terrain, so export a backup first;
+              Undo restores the previous grid.
+            </p>
             <label>
               Water level <span>{terrain.waterLevel.toFixed(1)} m</span>
               <input
@@ -430,13 +474,20 @@ export function CharacterEditor({
               <input
                 aria-label={`Spawn ${axis}`}
                 type="number"
-                min="-23"
-                max="23"
+                min={
+                  -(i === 0 ? world.terrain.width : world.terrain.depth) / 2 + 1
+                }
+                max={
+                  (i === 0 ? world.terrain.width : world.terrain.depth) / 2 - 1
+                }
                 step=".5"
                 value={c.spawn[i]}
                 onChange={(e) => {
                   const spawn = [...c.spawn] as [number, number];
-                  spawn[i] = Math.max(-23, Math.min(23, +e.target.value));
+                  const bound =
+                    (i === 0 ? world.terrain.width : world.terrain.depth) / 2 -
+                    1;
+                  spawn[i] = Math.max(-bound, Math.min(bound, +e.target.value));
                   onChange({ ...world, character: { ...c, spawn } });
                 }}
               />

@@ -42,6 +42,16 @@ The home page (also `/play`) is the clean, playable draft. Open `/editor` for th
 - Optional Gemini/OpenAI building generation into validated, editable 3D primitives; no generated executable code.
 - Optional Stripe Checkout for 10-credit packs; verified webhooks grant credits exactly once.
 
+## Larger driving worlds
+
+New worlds start at **256 × 256 m**, about 75 times the original 31 × 28 m area. For an existing draft, choose **Terrain → Expand for driving · 256 m**. This adds terrain around the existing layout instead of moving or scaling its buildings and stories. Undo restores the exact previous terrain; export a backup before making major size changes.
+
+**Island dimensions & paths** supports up to **512 × 512 m**. Larger worlds get wider central paths and a loop route when paths are enabled; cars can still go off-road. The terrain grid adapts from 33 × 33 to at most 257 × 257 points so brushes continue working over the new ground. Resizing resamples heights/paint at their world positions; shrinking crops the terrain, not the saved objects. Fine sculpting can change slightly through resampling.
+
+Object placement, spawn controls, vehicle movement, boat placement, camera distance and ocean bounds all support the larger map. Planes can climb to 96 m. Rain/snow and nearby shadows follow the explorer so they still work far from the village. Use **Top view** for a map overview and **Return to spawn** to get home. Existing worlds keep their saved dimensions until expanded; published snapshots do not change until republished.
+
+World JSON backups up to 16 MB can be imported, including fully painted 512 m maps. Uploaded GLB limits remain unchanged.
+
 ## Drift cars & radio
 
 The **Tokyo drift tuner** in **Build → Vehicles** is an original low-poly, orange-and-black coupe inspired by Tokyo Drift (not an official licensed replica). Both it and the adventure car can drift: accelerate with **W**, hold **Space** and steer with **A/D**, then release Space to regain grip. **B** remains the brake. Tire grip, top speed and steering are editable; smoke, temporary skid marks and a session-only drift score accompany real lateral movement. Return to spawn clears the score and effects without changing the saved layout.
@@ -99,6 +109,6 @@ Playwright starts its own server on port 5174 with a fresh temporary local datab
 
 React + Vinext, Three.js, Cloudflare Workers, D1/Drizzle, R2. Routes live in `app/api`, shared world validation in `lib/world.ts`, rendering in `lib/scene.ts` and `lib/models.ts`, provider adapters in `lib/generate.ts`, atomic credit operations in `lib/credits.ts`.
 
-The editor is desktop-first; playable portfolios support touch. Terrain is a 33×33 height field, not a voxel editor: no caves or overhangs. Snow is a visual weather effect and biome treatment, not accumulating physics. One world per account, 150 placed objects, 80 pieces per editable building, 15 MB per uploaded GLB, 30 uploaded models per account. Collision is approximate; this is a portfolio worldbuilder, not a general-purpose physics or multiplayer game engine. There are no subscriptions, billing administration, arbitrary scripting, collaboration, or custom domains in this hackathon version.
+The editor is desktop-first; playable portfolios support touch. Terrain uses a bounded 33×33 to 257×257 height field, not a voxel editor: no caves or overhangs. Snow is a visual weather effect and biome treatment, not accumulating physics. One world per account, 150 placed objects, 80 pieces per editable building, 15 MB per uploaded GLB, 30 uploaded models per account. Collision is approximate; this is a portfolio worldbuilder, not a general-purpose physics or multiplayer game engine. There are no subscriptions, billing administration, arbitrary scripting, collaboration, or custom domains in this hackathon version.
 
 Sites publication uses `.openai/hosting.json`, the retained build integration, and the official Sites source/package/deploy workflow. Production migrations are applied by deployment. Local database and upload state are ignored and are not deployed. See [README.framework.md](README.framework.md) for framework operations.

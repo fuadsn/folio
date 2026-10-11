@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { terrainHeight, type Terrain } from "./terrain";
 import type { World, WorldObject } from "./world";
+import { travelLimit } from "./world-size";
 
 export const vehicleKinds = ["car", "driftcar", "boat", "plane"] as const;
 export type VehicleKind = (typeof vehicleKinds)[number];
@@ -57,7 +58,7 @@ export const emptyVehicleHUD: VehicleHUD = {
   message: "",
 };
 export const TRAVEL_LIMIT = 58;
-export const MAX_FLIGHT_HEIGHT = 32;
+export const MAX_FLIGHT_HEIGHT = 96;
 
 export function landHeight(t: Terrain, x: number, z: number): number | null {
   return Math.abs(x) <= t.width / 2 && Math.abs(z) <= t.depth / 2
@@ -139,8 +140,10 @@ export function vehiclePlacement(
         (kind === "plane" ? 3 : 2.4),
     );
   const candidates: [number, number, number][] = [];
-  for (let z = -23; z <= 23; z++)
-    for (let x = -23; x <= 23; x++) {
+  const limit = travelLimit(t) - 4;
+  const step = Math.max(1, Math.floor(Math.max(t.width, t.depth) / 64));
+  for (let z = -limit; z <= limit; z += step)
+    for (let x = -limit; x <= limit; x += step) {
       if (
         kind === "boat"
           ? !isWater(t, x, z, 1.8)
@@ -246,7 +249,7 @@ export function stepVehicle(
     const x = s.x + (Math.sin(s.travelYaw) * s.speed * dt) / steps;
     const z = s.z + (Math.cos(s.travelYaw) * s.speed * dt) / steps;
     let y = s.y + dy / steps;
-    if (Math.abs(x) > TRAVEL_LIMIT || Math.abs(z) > TRAVEL_LIMIT) {
+    if (Math.abs(x) > travelLimit(t) || Math.abs(z) > travelLimit(t)) {
       s.speed = 0;
       message = "World boundary — turn back toward your island.";
       break;

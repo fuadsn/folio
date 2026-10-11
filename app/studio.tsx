@@ -67,6 +67,7 @@ import VehicleEditor from "./vehicle-editor";
 import { isVehicle, vehiclePlacement, emptyVehicleHUD } from "../lib/vehicles";
 import Forge from "./forge";
 import WorldDirectory from "./world-directory";
+import { WORLD_POSITION_LIMIT } from "../lib/world-size";
 
 async function api(path: string, options: RequestInit = {}) {
   const res = await fetch(path, {
@@ -297,13 +298,17 @@ export default function Studio() {
     if (!o) return;
     add(
       o.kind,
-      [Math.min(23, o.position[0] + 2), o.position[1], o.position[2]],
+      [
+        Math.min(WORLD_POSITION_LIMIT, o.position[0] + 2),
+        o.position[1],
+        o.position[2],
+      ],
       {
         ...o,
         id: crypto.randomUUID(),
         name: `${o.name.slice(0, 70)} copy`,
         position: [
-          Math.min(23, o.position[0] + 2),
+          Math.min(WORLD_POSITION_LIMIT, o.position[0] + 2),
           o.position[1],
           o.position[2],
         ],
@@ -395,8 +400,8 @@ export default function Studio() {
   async function importWorld(file?: File) {
     if (!file) return;
     try {
-      if (file.size > 2_000_000)
-        throw new Error("World backups must be under 2 MB.");
+      if (file.size > 16_000_000)
+        throw new Error("World backups must be under 16 MB.");
       const next = worldSchema.parse(JSON.parse(await file.text()));
       commit(next);
       setSelected(null);
@@ -1150,8 +1155,8 @@ export default function Studio() {
                       <input
                         aria-label={`Position ${axis}`}
                         type="number"
-                        min={i === 1 ? 0 : -24}
-                        max={i === 1 ? 15 : 24}
+                        min={i === 1 ? 0 : -WORLD_POSITION_LIMIT}
+                        max={i === 1 ? 15 : WORLD_POSITION_LIMIT}
                         step="0.5"
                         value={object.position[i]}
                         onChange={(e) => {
@@ -1161,8 +1166,11 @@ export default function Studio() {
                             number,
                           ];
                           p[i] = Math.max(
-                            i === 1 ? 0 : -24,
-                            Math.min(i === 1 ? 15 : 24, Number(e.target.value)),
+                            i === 1 ? 0 : -WORLD_POSITION_LIMIT,
+                            Math.min(
+                              i === 1 ? 15 : WORLD_POSITION_LIMIT,
+                              Number(e.target.value),
+                            ),
                           );
                           updateObject(object.id, { position: p });
                         }}

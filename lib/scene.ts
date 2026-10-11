@@ -27,6 +27,7 @@ import {
 } from "./vehicles";
 import { DriftEffects } from "./drift-effects";
 import { portalPosition, travelPortal } from "./travel-portal";
+import { WORLD_POSITION_LIMIT } from "./world-size";
 
 type Callbacks = {
   select: (id: string | null) => void;
@@ -156,7 +157,7 @@ export class WorldScene {
       const clamp = T.MathUtils.clamp;
       this.cb.transform(this.selected, {
         position: [
-          clamp(o.position.x, -24, 24),
+          clamp(o.position.x, -WORLD_POSITION_LIMIT, WORLD_POSITION_LIMIT),
           clamp(
             o.position.y -
               (this.world
@@ -172,7 +173,7 @@ export class WorldScene {
             0,
             15,
           ),
-          clamp(o.position.z, -24, 24),
+          clamp(o.position.z, -WORLD_POSITION_LIMIT, WORLD_POSITION_LIMIT),
         ],
         rotation: ((T.MathUtils.radToDeg(o.rotation.y) % 360) + 360) % 360,
         scale: [
@@ -363,9 +364,17 @@ export class WorldScene {
         ? ground
         : (water ?? ground ?? new T.Vector3());
     return [
-      T.MathUtils.clamp(Math.round(point.x), -23, 23),
+      T.MathUtils.clamp(
+        Math.round(point.x),
+        -WORLD_POSITION_LIMIT,
+        WORLD_POSITION_LIMIT,
+      ),
       0,
-      T.MathUtils.clamp(Math.round(point.z), -23, 23),
+      T.MathUtils.clamp(
+        Math.round(point.z),
+        -WORLD_POSITION_LIMIT,
+        WORLD_POSITION_LIMIT,
+      ),
     ];
   }
   keyDown = (e: KeyboardEvent) => {
@@ -401,6 +410,16 @@ export class WorldScene {
   setWorld(world: World) {
     this.occluded.clear();
     this.world = world;
+    const size = Math.max(world.terrain.width, world.terrain.depth);
+    this.camera.far = Math.max(240, size * 5);
+    this.camera.updateProjectionMatrix();
+    this.orbit.maxDistance = Math.max(80, size * 2.5);
+    this.grid.scale.set(
+      Math.max(48, world.terrain.width) / 48,
+      1,
+      Math.max(48, world.terrain.depth) / 48,
+    );
+    this.renderer.domElement.dataset.worldSize = `${world.terrain.width},${world.terrain.depth}`;
     const sky =
       world.lighting === "night"
         ? "#172335"
@@ -411,8 +430,8 @@ export class WorldScene {
     const fog = world.weather.type === "fog";
     this.scene.fog = new T.Fog(
       sky,
-      fog ? 10 + (1 - world.weather.intensity) * 20 : 65,
-      fog ? 58 + (1 - world.weather.intensity) * 55 : 125,
+      fog ? 10 + (1 - world.weather.intensity) * 20 : Math.max(65, size * 0.65),
+      fog ? 58 + (1 - world.weather.intensity) * 55 : Math.max(125, size * 3),
     );
     this.sun.intensity =
       world.lighting === "night" ? 0.5 : world.lighting === "sunset" ? 2.4 : 3;
@@ -627,7 +646,15 @@ export class WorldScene {
       this.jumpVelocity = 6;
   }
   reset(top = false) {
-    this.camera.position.set(top ? 0 : 28, top ? 48 : 30, top ? 0.01 : 36);
+    const size = Math.max(
+      this.world?.terrain.width ?? 31,
+      this.world?.terrain.depth ?? 28,
+    );
+    this.camera.position.set(
+      top ? 0 : 28,
+      top ? Math.max(48, size * 1.65) : 30,
+      top ? 0.01 : 36,
+    );
     this.orbit.target.set(0, 0, 0);
     this.orbit.update();
   }
@@ -1087,6 +1114,19 @@ export class WorldScene {
         this.driftEffects.tick(dt, state, this.world.terrain, object?.scale);
       }
     } else this.orbit.update();
+    const center = this.playing ? this.player.position : this.orbit.target;
+    // Keep the fixed-size particle/shadow budgets around the visitor, not the origin.
+    if (this.atmosphere.object) this.atmosphere.object.position.copy(center);
+    this.sun.position.set(center.x - 15, center.y + 28, center.z + 15);
+    this.sun.target.position.copy(center);
+    this.sun.target.updateMatrixWorld();
+    if (this.scene.fog instanceof T.Fog && this.world) {
+      const size = Math.max(this.world.terrain.width, this.world.terrain.depth);
+      this.scene.fog.far =
+        this.playing && this.world.weather.type === "fog"
+          ? 58 + (1 - this.world.weather.intensity) * 55
+          : Math.max(125, size * 3);
+    }
     this.atmosphere.tick(dt, now / 1000);
     this.renderer.render(this.scene, this.camera);
   };

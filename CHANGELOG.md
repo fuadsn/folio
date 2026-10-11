@@ -4,6 +4,13 @@ Record each meaningful project change during the event, newest first. Update thi
 
 ## Event build log
 
+## 2026-10-11T09:11:29+05:30 — Larger driving worlds
+
+- Changed: Added 256 × 256 m new worlds, an undoable expansion control, a 512 × 512 m maximum, adaptive terrain grids and wider loop roads. Expanded object/spawn/vehicle limits, camera and ocean bounds; weather and nearby shadows follow the explorer. Added the user's preference to commit completed, tested changes to `AGENTS.md`.
+- Why: Give cars room to cruise and drift without hitting the original small-world bounds while preserving authored building/story positions.
+- Validation: The full 34-test regression suite passed. After raising the world-backup import cap to 16 MB, all five focused large-world tests passed, including an actual export/import round trip over 2 MB; typecheck and build passed again. Expanded-map and driving screenshots inspected. Applied the requested local draft expansion after exporting a backup to ignored `outputs/`; objects/stories and publication state were verified unchanged.
+- Limitations: Resizing resamples terrain and paint; shrinking crops terrain. Existing published snapshots do not expand automatically. Geometry and object counts remain bounded; no infinite streaming world.
+
 ## 2026-10-11T08:58:48+05:30 — Preserve the GitHub event history and prepare the handoff
 
 - Changed: Merged the existing `fuadsn/folio` event-template history with the local app history. Kept the original event README as `HACKATHON.md`, retained the rules and pull-request checklist, combined agent guidance/ignore rules, and documented the demo and implementation checkpoint.
