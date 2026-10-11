@@ -60,6 +60,14 @@ Object placement, spawn controls, vehicle movement, boat placement, camera dista
 
 World JSON backups up to 16 MB can be imported, including fully painted 512 m maps. Uploaded GLB limits remain unchanged.
 
+### Populate your own world without crowding the drive
+
+In **Build**, choose **Add drift neighborhood**. This adds eight fictional, editable NPC guides, workshop/café/gallery buildings and courtyard props around your existing village. A **52 m-wide open drift lawn** is reserved southeast of the village, centered at **X 42, Z 32**. New scenery stays outside the lawn, 16 m-wide central driving corridors and the outer loop's driving buffer. Your original buildings, vehicles, stories, terrain and spawn stay unchanged.
+
+The action requires at least 192 × 192 m terrain. It checks actual built-in/edited-part footprints, avoids existing objects and steep/wet sites, and respects the 150-object limit. Some additions may be skipped on customized maps. Imported GLBs receive a conservative exclusion buffer, not an exact mesh check. If the drift lawn is already occupied, flooded or too uneven, the action explains what to adjust instead of removing objects or flattening your work. This is a layout-time check, not a permanent no-build zone; later edits remain unrestricted.
+
+Everything is added to your draft in one undoable step. Repeating it does not duplicate or reset existing neighborhood objects. Export a backup before major layout changes; **Undo** is available during the current editor session. Published snapshots and the sample-world records are not changed. These are editable starter scenes and scripted characters, not new portfolio credentials or AI-controlled pedestrians.
+
 ## Drift cars & radio
 
 The **Tokyo drift tuner** in **Build → Vehicles** is an original low-poly, orange-and-black coupe inspired by Tokyo Drift (not an official licensed replica). Both it and the adventure car can drift: accelerate with **W**, hold **Space** and steer with **A/D**, then release Space to regain grip. **B** remains the brake. Tire grip, top speed and steering are editable; smoke, temporary skid marks and a session-only drift score accompany real lateral movement. Return to spawn clears the score and effects without changing the saved layout.

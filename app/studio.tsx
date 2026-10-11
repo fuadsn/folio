@@ -618,6 +618,22 @@ export default function Studio() {
                     aria-label="Search objects"
                   />
                 </div>
+                <div className="neighborhood-promo">
+                  <b>A lively world. Room to drift.</b>
+                  <p>Add NPCs, workshops, cafés and props around a 52 m-wide open lawn. Keeps existing objects and terrain; skips occupied spots.</p>
+                  <button className="button full" onClick={async () => {
+                    try {
+                      const { populateNeighborhood } = await import("../lib/neighborhood");
+                      if (!worldRef.current) return;
+                      const result = populateNeighborhood(worldRef.current);
+                      if (result.added) commit(result.world);
+                      notify(result.added
+                        ? `${result.added} neighborhood objects added. ${result.skipped} unsuitable spots skipped. Undo restores your layout.`
+                        : "No additions: these objects are already present or the remaining spots are occupied.");
+                    } catch (e) { notify((e as Error).message); }
+                  }}>Add drift neighborhood</button>
+                  <small>192 m+ terrain · editable · one-step Undo</small>
+                </div>
                 <div className="categories">
                   {[
                     "All",

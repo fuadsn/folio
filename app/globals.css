@@ -2938,3 +2938,6 @@ a:focus-visible {
 .npc-choices .button { white-space: normal; text-align: left; justify-content: flex-start; }
 .npc-answer { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; }
 .npc-choice-editor { border-top: 1px solid var(--line); padding-top: 14px; }
+.neighborhood-promo { margin: 14px 18px; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: #fef3e2; }
+.neighborhood-promo p { font-size: 12px; line-height: 1.5; margin: 8px 0 12px; }
+.neighborhood-promo small { display: block; font-size: 10px; opacity: .65; margin-top: 8px; }

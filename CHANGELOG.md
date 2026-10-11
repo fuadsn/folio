@@ -4,6 +4,15 @@ Record each meaningful project change during the event, newest first. Update thi
 
 ## Event build log
 
+## 2026-10-11T10:44:27+05:30 — Drift-friendly neighborhood for the creator's world
+
+- Changed: Added an undoable Build → Add drift neighborhood action with eight editable NPCs, workshops, a café, gallery, lodge, lookout and courtyard props. Reserves a 52 m-diameter southeast drift lawn and wide cross/loop corridors. Preserves existing objects, terrain, stories, spawn and vehicle settings; skips unsuitable/occupied sites and never duplicates existing neighborhood IDs.
+- Why: Populate the creator's own world while retaining room to drive and drift, rather than only enriching the separate demo worlds.
+- Safety: Refuses small maps and occupied, flooded or uneven drift lawns; checks model footprints, land/slope, spawn clearance and the 150-object cap. Adds only to the draft, not published snapshots or other owners' worlds.
+- Validation: All 46 regression tests, typecheck and build passed; all four focused neighborhood tests passed again with final wet-site/uneven-lawn coverage. Layout/physics tests check separation, capacity, idempotence and collision-free slides; browser checks cover save/undo/redo and actual drifting. Exported a verified backup to ignored `outputs/`, then added 45 objects (eight NPCs, nine buildings and 28 props) to the creator's local draft. Verified all 27 original objects and other world fields, published state and every other world row were unchanged. Inspected map, dialogue and driving screenshots.
+- Corrections: Browser tests now wait for the lazy-loaded layout to appear before checking autosave, and distinguish the Objects rail from the catalog category.
+- Limitations: Fixed neighborhood layout with skipped sites on customized terrain; no automatic relocation/flattening. Imported GLBs use conservative buffers. Future manual edits can occupy the reserved space. Localhost-only follow-up after the documented event cutoff; no submission claim.
+
 ## 2026-10-11T10:27:20+05:30 — NPC guides and populated demo scenes
 
 - Changed: Added NPC guides with editable appearance, authored greetings, six dialogue choices and story links. Guides turn/wave, respond to click/E/touch, pause movement during conversations and handle missing links. Added project kiosks, workshop facades, picnic tables, campfires and supply crates; built-in pieces remain editable. Populated each demo with three guides and themed scene details; added an explicit, additive `--add-details` local upgrade.
