@@ -2,6 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import type { World, WorldObject, Kind } from "../lib/world";
 import type { WorldScene } from "../lib/scene";
+import type { Terrain, TerrainBrush } from "../lib/terrain";
+import type { VehicleHUD } from "../lib/vehicles";
 export default function WorldCanvas({
   world,
   selected,
@@ -15,6 +17,11 @@ export default function WorldCanvas({
   onDrop,
   onReady,
   frozen = false,
+  brush = null,
+  onTerrain,
+  onVehicle,
+  startVehicle = null,
+  onTravel,
 }: {
   world: World;
   selected: string | null;
@@ -28,14 +35,55 @@ export default function WorldCanvas({
   onDrop?: (kind: Kind, position: [number, number, number]) => void;
   onReady?: (scene: WorldScene) => void;
   frozen?: boolean;
+  brush?: TerrainBrush | null;
+  onTerrain?: (terrain: Terrain) => void;
+  onVehicle?: (hud: VehicleHUD) => void;
+  startVehicle?: string | null;
+  onTravel?: () => void;
 }) {
   const mount = useRef<HTMLDivElement>(null),
     engine = useRef<WorldScene | null>(null);
   const [error, setError] = useState("");
-  const callbacks = useRef({ onSelect, onTransform, onOpen, onNear, onReady });
-  callbacks.current = { onSelect, onTransform, onOpen, onNear, onReady };
-  const current = useRef({ world, selected, playing, tool, snap, frozen });
-  current.current = { world, selected, playing, tool, snap, frozen };
+  const callbacks = useRef({
+    onSelect,
+    onTransform,
+    onOpen,
+    onNear,
+    onReady,
+    onTerrain,
+    onVehicle,
+    onTravel,
+  });
+  callbacks.current = {
+    onSelect,
+    onTransform,
+    onOpen,
+    onNear,
+    onReady,
+    onTerrain,
+    onVehicle,
+    onTravel,
+  };
+  const current = useRef({
+    world,
+    selected,
+    playing,
+    tool,
+    snap,
+    frozen,
+    brush,
+    startVehicle,
+  });
+  current.current = {
+    world,
+    selected,
+    playing,
+    tool,
+    snap,
+    frozen,
+    brush,
+    startVehicle,
+  };
   useEffect(() => {
     let cancelled = false;
     import("../lib/scene")
@@ -48,6 +96,9 @@ export default function WorldCanvas({
             open: (id) => callbacks.current.onOpen(id),
             near: (id) => callbacks.current.onNear(id),
             error: setError,
+            terrain: (terrain) => callbacks.current.onTerrain?.(terrain),
+            vehicle: (hud) => callbacks.current.onVehicle?.(hud),
+            travel: onTravel ? () => callbacks.current.onTravel?.() : undefined,
           });
           engine.current = e;
           const latest = current.current;
@@ -57,6 +108,9 @@ export default function WorldCanvas({
           e.setTool(latest.tool);
           e.setSnap(latest.snap);
           e.frozen = latest.frozen;
+          e.setBrush(latest.brush);
+          if (latest.playing && latest.startVehicle)
+            e.enterVehicle(latest.startVehicle, true);
           callbacks.current.onReady?.(e);
         } catch {
           setError(
@@ -81,11 +135,18 @@ export default function WorldCanvas({
     engine.current?.setPlay(playing);
   }, [playing]);
   useEffect(() => {
+    if (playing && startVehicle)
+      engine.current?.enterVehicle(startVehicle, true);
+  }, [playing, startVehicle]);
+  useEffect(() => {
     engine.current?.setTool(tool);
   }, [tool]);
   useEffect(() => {
     engine.current?.setSnap(snap);
   }, [snap]);
+  useEffect(() => {
+    engine.current?.setBrush(brush);
+  }, [brush]);
   useEffect(() => {
     if (engine.current) {
       engine.current.frozen = frozen;

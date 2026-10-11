@@ -1,7 +1,7 @@
 import { requireChatGPTUser } from "./chatgpt-auth";
-import Studio from "./studio";
+import DraftExplorer from "./draft-explorer";
 export const dynamic = "force-dynamic";
 export default async function Home() {
   await requireChatGPTUser("/");
-  return <Studio />;
+  return <DraftExplorer />;
 }

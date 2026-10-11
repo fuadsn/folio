@@ -52,6 +52,9 @@ export default defineConfig(async ({ command }) => {
   const { cloudflare } = await import("@cloudflare/vite-plugin");
 
   return {
+    ...(process.env.WORLDFOLIO_TEST_STATE
+      ? { cacheDir: "node_modules/.vite-worldfolio-test" }
+      : {}),
     server: {
       ...(managedLinux
         ? { host: "0.0.0.0", allowedHosts: ["terminal.local"] }
@@ -65,6 +68,9 @@ export default defineConfig(async ({ command }) => {
       sites({ mockAuth: !managedLinux }),
       connectorPreview(),
       cloudflare({
+        ...(process.env.WORLDFOLIO_TEST_STATE
+          ? { persistState: { path: process.env.WORLDFOLIO_TEST_STATE } }
+          : {}),
         viteEnvironment: { name: "rsc", childEnvironments: ["ssr"] },
         inspectorPort: false,
         config: {

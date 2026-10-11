@@ -12,7 +12,71 @@ export default function AssetArt({
   return (
     <svg viewBox="0 0 120 95" fill="none" aria-hidden="true">
       <ellipse cx="60" cy="81" rx="35" ry="8" fill="#263730" opacity=".08" />
-      {nature ? (
+      {kind === "driftcar" ? (
+        <>
+          <path d="m15 61 32-24 38-8 22 24-8 19-57 17-27-13Z" fill={color} />
+          <path d="m47 38 25-6 17 16-30 10Z" fill="#292323" />
+          <path d="m48 41 22-5 11 12-24 8Z" fill="#47636a" />
+          <path d="m16 63 40 10 43-13-1 12-56 17-27-13Z" fill="#292323" />
+          <path d="m16 61 25-17 15 18-30 10Z" fill="#292323" />
+          <path d="m86 35 2-10m15 20 2-12" stroke="#292323" strokeWidth="4" />
+          <path d="m76 23 18-5 21 14-19 6Z" fill="#292323" />
+          <ellipse cx="43" cy="76" rx="8" ry="10" fill="#292323" />
+          <ellipse cx="90" cy="65" rx="8" ry="10" fill="#292323" />
+          <ellipse cx="43" cy="76" rx="5" ry="6" fill="#e7d4b3" />
+          <ellipse cx="90" cy="65" rx="5" ry="6" fill="#e7d4b3" />
+          <path d="m16 63 10 3m7 2 10 3" stroke="#fff1cc" strokeWidth="3" />
+          <path
+            d="m8 81 17 5m-10-2 10 5"
+            stroke="#86664c"
+            strokeWidth="2"
+            strokeLinecap="round"
+            opacity=".5"
+          />
+        </>
+      ) : kind === "car" ? (
+        <>
+          <path d="m24 52 7-14 37-10 21 14 10 23-59 17-19-14Z" fill={color} />
+          <path d="m37 38 29-8 15 12-31 9Z" fill="#fef3e2" />
+          <path d="m39 41 24-6 10 9-25 7Z" fill="#7ba7ae" />
+          <path d="m50 55 49-13v24L49 81Z" fill="#2a1a0e" opacity=".15" />
+          <ellipse cx="42" cy="72" rx="8" ry="11" fill="#2a1a0e" />
+          <ellipse cx="85" cy="61" rx="8" ry="11" fill="#2a1a0e" />
+          <ellipse cx="43" cy="72" rx="3" ry="5" fill="#fef3e2" />
+          <ellipse cx="86" cy="61" rx="3" ry="5" fill="#fef3e2" />
+          <path d="m23 56 16 8v7l-16-8Z" fill="#ffe3a5" />
+        </>
+      ) : kind === "boat" ? (
+        <>
+          <path d="m17 61 58-25 30 18-9 20-41 9-25-8Z" fill={color} />
+          <path d="m17 61 58-25 30 18-50 20Z" fill="#fef3e2" />
+          <path d="m38 58 36-15 18 10-35 13Z" fill={color} />
+          <path d="m57 49 22-8-4-17-22 8Z" fill="#7ba7ae" />
+          <path d="m52 31 22-8" stroke="#2a1a0e" strokeWidth="3" />
+          <path
+            d="m19 82 22 5m36-1 22-5"
+            stroke="#7ba7ae"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+        </>
+      ) : kind === "plane" ? (
+        <>
+          <path d="m34 72 14-29 26-16 13 8-17 29-24 18Z" fill={color} />
+          <path d="m15 32 78 29-5 10-75-25Z" fill="#f4ae52" />
+          <path d="m33 68 25 10-5 7-28-8Z" fill="#fef3e2" />
+          <path d="m58 41 10-10 9 7-10 10Z" fill="#7ba7ae" />
+          <path
+            d="m74 17 18 27"
+            stroke="#2a1a0e"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <path d="m30 69 5-15 10 17Z" fill={color} />
+          <circle cx="45" cy="77" r="4" fill="#2a1a0e" />
+          <circle cx="75" cy="61" r="4" fill="#2a1a0e" />
+        </>
+      ) : nature ? (
         kind === "rock" ? (
           <>
             <path d="m30 76 8-30 23-8 25 16 8 22-33 9Z" fill={color} />

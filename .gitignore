@@ -21,6 +21,14 @@
 # misc
 .DS_Store
 *.pem
+*.key
+Thumbs.db
+*.log
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
 
 # debug
 npm-debug.log*

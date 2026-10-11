@@ -2,9 +2,13 @@
 
 Build a little 3D world around your work. Every object can tell a story; a portfolio needs an introduction, project, résumé, and contact details, but their shapes are up to you.
 
+Repository: [fuadsn/folio](https://github.com/fuadsn/folio). The original event README is preserved in [HACKATHON.md](HACKATHON.md); see [RULES.md](RULES.md), [AI_USAGE.md](AI_USAGE.md), [CHANGELOG.md](CHANGELOG.md), and [SUBMISSION.md](SUBMISSION.md) for the event record and demo handoff.
+
+**Current mode: localhost only.** Do not deploy or push to hosted Sites unless explicitly requested. The earlier private hosted copy is awaiting manual removal because the available management tools do not expose deletion. The in-app Publish button saves a local portfolio snapshot; it does not deploy the application.
+
 ## Run locally
 
-Node 22.13+ is required. From `hackathon`, run `npm run dev`, or from this directory:
+Node 22.13+ is required. Clone `https://github.com/fuadsn/folio` and run these commands from the repository root:
 
 ```sh
 npm ci
@@ -15,11 +19,20 @@ npm run dev
 
 Apply that SQL only once on a fresh local database. The current checkout already has its database initialized. Open http://127.0.0.1:5173. Local-only sign-in simulates one account, `local_seedy`. Do not expose the development server to the internet. Production identity is provided by Sites, not this development cookie.
 
+The home page (also `/play`) is the clean, playable draft. Open `/editor` for the dedicated building workspace. **Explore** saves your latest draft before opening it. No cloud deployment occurs.
+
 ## What works
 
 - 21 placeable building, nature, prop, and geometric objects; click or drag to add.
 - 3D move/rotate/scale handles, grid snapping, numerical transforms, duplicate, delete, undo/redo.
 - Editable world name, owner, introduction, colors and day/sunset/night atmosphere. An optional empty landscape, with undo.
+- Cream-first editor palette (`#FEF3E2`, `#F4AE52`, `#D4621A`, `#2A1A0E`). Light mode is world daylight; dark mode is world nighttime.
+- Five terrain presets: meadow, snowy tundra, desert dunes, alpine valley, and volcanic island. Presets preserve objects and stories; replacing terrain can be undone.
+- Direct raise/lower/smooth/flatten/paint brushes, island dimensions, water level, and paths. One completed brush stroke is one undo step. Objects follow the ground; their Y coordinate is an offset above it.
+- Independent clear, snow, rain, and fog weather with intensity and wind controls.
+- Building materials and roof styling, tree trunk/canopy/snow controls, independent XYZ scaling, and editable primitive geometry for every built-in object. Imported GLBs can be transformed but not remodeled internally.
+- Customizable animated explorer (jacket, skin, hat, speed, spawn), terrain-following movement, Space/touch jump, and reset-to-spawn.
+- Placeable, editable cars, motor boats and propeller planes in **Build → Vehicles**. Tune speed/steering or open **Test drive** in the inspector. Visitors press **F** near a vehicle to enter/exit; **W/S** accelerate/slow (reverse on cars/boats), **A/D** steer, **B** brakes, **Shift** boosts. Planes use **Space** to climb and **C** to descend; slow down to land. Touch controls are included. Boats need ocean water or a sculpted lake, and a nearby shore for getting out. Vehicle motion is session-only: **Return to spawn** restores their authored positions. This is arcade movement, not a full physics simulator.
 - Any object can hold About, Project, Résumé, or Contact content. Text is rendered safely and links allow only HTTP, HTTPS, and mailto.
 - Autosaved drafts in D1; optimistic revisions prevent another tab silently overwriting your work.
 - Walkable preview with WASD/arrows, Shift to run, E or click to open stories; touch controls and an accessible conventional portfolio view.
@@ -28,6 +41,22 @@ Apply that SQL only once on a fresh local database. The current checkout already
 - JSON export/import for layout and stories. GLB files remain in their original account on this server.
 - Optional Gemini/OpenAI building generation into validated, editable 3D primitives; no generated executable code.
 - Optional Stripe Checkout for 10-credit packs; verified webhooks grant credits exactly once.
+
+## Drift cars & radio
+
+The **Tokyo drift tuner** in **Build → Vehicles** is an original low-poly, orange-and-black coupe inspired by Tokyo Drift (not an official licensed replica). Both it and the adventure car can drift: accelerate with **W**, hold **Space** and steer with **A/D**, then release Space to regain grip. **B** remains the brake. Tire grip, top speed and steering are editable; smoke, temporary skid marks and a session-only drift score accompany real lateral movement. Return to spawn clears the score and effects without changing the saved layout.
+
+Both cars also drive **off-road** across grass, sand, snow and sculpted hills. Paths are optional decoration, not a driving restriction. The body tilts with hills and side slopes; steep cliffs, deep water and solid objects still block the car. Boats remain the way to cross water.
+
+Car **Radio** includes an opt-in [Spotify player for Tokyo Drift by Teriyaki Boyz](https://open.spotify.com/track/5kfNNvRHnxiSwkcSfImN5s), using [Spotify's official embed](https://developer.spotify.com/documentation/embeds/tutorials/creating-an-embed). It makes no Spotify request until the visitor selects it. Availability and full-track/preview playback depend on Spotify and the listener's account/region. No commercial song audio is bundled or downloaded. Alternatively, select a permitted local audio file (up to 25 MB): it plays from a browser object URL, never uploads or publishes, and is forgotten on reload. Closing the radio or leaving the vehicle stops playback.
+
+## Connected portfolio worlds
+
+Open **Worlds** or `/discover` to browse and search the network. In the Publish dialog, enable **Join the world network**, then publish. Only opted-in published snapshots appear. Existing worlds remain unlisted until their creator opts in; draft edits never change the listing until republished. Uncheck the option and republish to remove the listing while keeping the direct link. **Unpublish** removes both.
+
+Playable worlds have a glowing **World Portal** on free dry ground near the spawn. Click it, press **P**, or use the **Worlds** button to choose a destination. The button remains available if there is no safe space for a portal. Travel opens the selected portfolio at its spawn point; the old world's vehicles and radio do not travel with you. The directory also works without WebGL and supports keyboard and touch.
+
+This connects portfolios on the **same application server**, not unrelated websites or GitHub repositories. Local sign-in still represents one account, so the working local directory will show only portfolios actually published and opted in there. Automated tests seed two explicitly synthetic creators into their isolated database to verify cross-world travel; those fixtures are never added to your working world. Shared hosting with real authentication is required for multiple people to publish from different devices. This is portal navigation between portfolios, not synchronized multiplayer or one seamless continuous map. No hosting deployment is included in the GitHub push.
 
 ## Connect AI locally
 
@@ -52,11 +81,11 @@ Webhook endpoint: `/api/stripe/webhook`. Subscribe to `checkout.session.complete
 
 For local test webhooks, use Stripe CLI forwarding to `http://127.0.0.1:5173/api/stripe/webhook`; use the signing secret printed by that listener. No real checkout or payment has been performed in development.
 
-**Hosting boundary:** a new Sites deployment is owner-private. Its sharing policy also applies to published portfolio links. Stripe cannot call an owner-private Site directly, so hosted payments require an intentionally public, webhook-reachable deployment. Do not switch sharing just to bypass this restriction. Runtime credentials must be set through Sites secrets, not the hosting manifest or source control. The local mock login is never used in production.
+**Hosting boundary:** the [Sites rules](https://learn.chatgpt.com/docs/sites#understand-limits-and-unsupported-uses) prohibit enabling financial transactions. Do not enable Stripe on a Sites deployment, even if public. A future paid version needs another hosting platform and appropriate production authentication. The current app runs locally; its mock login is development-only.
 
 ## Verify
 
-With `npm run dev` running in another terminal:
+Run:
 
 ```sh
 npm run typecheck
@@ -64,12 +93,12 @@ npm test
 npm run build
 ```
 
-Playwright uses installed Google Chrome on macOS and its normal Chromium on other systems. Tests cover editor rendering, edits, undo/redo, GLB upload, backup import/export, editable building pieces, required portfolio stories, publish/unpublish, snapshot isolation, anonymous read-only access, stale writes, unowned assets, and unconfigured-provider behavior. SQLite-backed accounting tests cover payment retries, failed-generation refunds and duplicate reservations. The mutation test uses the local demo account and restores its draft; do not run it against a production deployment.
+Playwright starts its own server on port 5174 with a fresh temporary local database, independent of your working world on 5173. It uses installed Google Chrome on macOS and its normal Chromium on other systems. Tests cover terrain brushes and undo, biome/weather/theme persistence, character movement and jumping, object-to-piece conversion, editor rendering, GLB uploads, backups, required portfolio stories, publish/unpublish, snapshot isolation, anonymous read-only access, stale writes, unowned assets, and unconfigured-provider behavior. SQLite-backed accounting tests cover payment retries, failed-generation refunds and duplicate reservations. The test server is stopped after the suite; temporary databases are retained in the OS temporary directory for debugging.
 
 ## Architecture and hackathon scope
 
 React + Vinext, Three.js, Cloudflare Workers, D1/Drizzle, R2. Routes live in `app/api`, shared world validation in `lib/world.ts`, rendering in `lib/scene.ts` and `lib/models.ts`, provider adapters in `lib/generate.ts`, atomic credit operations in `lib/credits.ts`.
 
-The editor is desktop-first; published portfolios support touch. One world per account, 150 placed objects, 80 pieces per generated building, 15 MB per uploaded GLB, 30 uploaded models per account. Collision is approximate; this is a portfolio worldbuilder, not a general-purpose physics or multiplayer game engine. There are no subscriptions, billing administration, arbitrary scripting, collaboration, or custom domains in this hackathon version.
+The editor is desktop-first; playable portfolios support touch. Terrain is a 33×33 height field, not a voxel editor: no caves or overhangs. Snow is a visual weather effect and biome treatment, not accumulating physics. One world per account, 150 placed objects, 80 pieces per editable building, 15 MB per uploaded GLB, 30 uploaded models per account. Collision is approximate; this is a portfolio worldbuilder, not a general-purpose physics or multiplayer game engine. There are no subscriptions, billing administration, arbitrary scripting, collaboration, or custom domains in this hackathon version.
 
 Sites publication uses `.openai/hosting.json`, the retained build integration, and the official Sites source/package/deploy workflow. Production migrations are applied by deployment. Local database and upload state are ignored and are not deployed. See [README.framework.md](README.framework.md) for framework operations.

@@ -17,7 +17,7 @@ export default function PartsEditor({
   return (
     <div className="parts-editor">
       <div className="section-label">
-        CUSTOM BUILDING · {parts.length} PIECES
+        OBJECT GEOMETRY · {parts.length} PIECES
       </div>
       <p className="fineprint">Make it yours, one piece at a time.</p>
       {parts.map((part, index) => (
@@ -43,11 +43,18 @@ export default function PartsEditor({
                   update(index, { shape: e.target.value as Part["shape"] })
                 }
               >
-                {["box", "sphere", "cylinder", "cone", "roof", "torus"].map(
-                  (shape) => (
-                    <option key={shape}>{shape}</option>
-                  ),
-                )}
+                {[
+                  "box",
+                  "sphere",
+                  "cylinder",
+                  "cone",
+                  "roof",
+                  "torus",
+                  "dome",
+                  "icosahedron",
+                ].map((shape) => (
+                  <option key={shape}>{shape}</option>
+                ))}
               </select>
             </label>
             <label className="color-field">
@@ -129,7 +136,7 @@ export default function PartsEditor({
             {
               name: `Piece ${parts.length + 1}`,
               shape: "box",
-              color: "#afa0d5",
+              color: "#f4ae52",
               position: [0, 0.5, 0],
               size: [1, 1, 1],
               rotation: [0, 0, 0],

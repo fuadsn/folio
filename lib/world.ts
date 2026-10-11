@@ -1,8 +1,43 @@
 import { z } from "zod";
+import { terrainSchema, weatherSchema, characterSchema } from "./terrain";
+import { vehicleSchema, isVehicle } from "./vehicles";
 
 export const ROLES = ["none", "about", "project", "resume", "contact"] as const;
 export type Role = (typeof ROLES)[number];
 export const CATALOG = [
+  {
+    kind: "driftcar",
+    name: "Tokyo drift tuner",
+    category: "Vehicles",
+    color: "#f48128",
+    role: "none",
+    description:
+      "Tokyo Drift–inspired widebody coupe. Hold Space and steer to slide",
+  },
+  {
+    kind: "car",
+    name: "Adventure car",
+    category: "Vehicles",
+    color: "#d4621a",
+    role: "none",
+    description: "Cruise around your island",
+  },
+  {
+    kind: "boat",
+    name: "Motor boat",
+    category: "Vehicles",
+    color: "#4d969e",
+    role: "none",
+    description: "Take the scenic water route",
+  },
+  {
+    kind: "plane",
+    name: "Propeller plane",
+    category: "Vehicles",
+    color: "#f4ae52",
+    role: "none",
+    description: "See your world from above",
+  },
   {
     kind: "gallery",
     name: "Project gallery",
@@ -177,7 +212,18 @@ const bounded = z.number().finite().min(-24).max(24);
 const hex = z.string().regex(/^#[0-9a-fA-F]{6}$/);
 export const partSchema = z.object({
   name: z.string().max(60),
-  shape: z.enum(["box", "sphere", "cylinder", "cone", "roof", "torus"]),
+  shape: z.enum([
+    "box",
+    "sphere",
+    "cylinder",
+    "cone",
+    "roof",
+    "torus",
+    "dome",
+    "icosahedron",
+  ]),
+  taper: z.number().min(0).max(1).optional(),
+  segments: z.number().int().min(3).max(24).optional(),
   position: z.tuple([
     z.number().min(-10).max(10),
     z.number().min(0).max(15),
@@ -200,11 +246,25 @@ export const blueprintSchema = z.object({
   parts: z.array(partSchema).min(1).max(80),
 });
 export type Blueprint = z.infer<typeof blueprintSchema>;
+export const objectDetailsSchema = z.object({
+  body: hex.optional(),
+  trim: hex.optional(),
+  wood: hex.optional(),
+  roofStyle: z.enum(["hip", "flat", "spire"]).default("hip"),
+  roofHeight: z.number().min(0.3).max(2).default(1),
+  trunkHeight: z.number().min(0.5).max(2.2).default(1),
+  foliage: z.number().min(0.4).max(1.8).default(1),
+  snow: z.number().min(0).max(1).optional(),
+});
+export type ObjectDetails = z.infer<typeof objectDetailsSchema>;
 export const objectSchema = z.object({
   id: z.string().min(1).max(80),
   kind: z.enum(["custom", ...CATALOG.map((x) => x.kind)]),
   name: z.string().min(1).max(80),
   color: hex,
+  details: objectDetailsSchema.default({}),
+  collidable: z.boolean().default(true),
+  vehicle: vehicleSchema.optional(),
   position: z.tuple([bounded, z.number().finite().min(0).max(15), bounded]),
   rotation: z.number().finite().min(-360).max(360),
   scale: z.tuple([
@@ -233,6 +293,10 @@ export const worldSchema = z
     ground: hex,
     water: hex,
     lighting: z.enum(["day", "sunset", "night"]),
+    discoverable: z.boolean().default(false),
+    terrain: terrainSchema.default({}),
+    weather: weatherSchema,
+    character: characterSchema,
     objects: z.array(objectSchema).max(150),
   })
   .superRefine((w, ctx) => {
@@ -267,6 +331,15 @@ export function newObject(
     kind,
     name: item?.name ?? "Custom creation",
     color: item?.color ?? "#b3a3d5",
+    details: objectDetailsSchema.parse({}),
+    collidable: !["flowers", "pond", "flag", "platform"].includes(kind),
+    ...(isVehicle(kind)
+      ? {
+          vehicle: vehicleSchema.parse(
+            kind === "driftcar" ? { speed: 1.2, handling: 1.1, grip: 0.7 } : {},
+          ),
+        }
+      : {}),
     position,
     rotation: 0,
     scale: [1, 1, 1],
@@ -327,6 +400,7 @@ export function starterWorld(): World {
   add("pond", -9, 3, { scale: [1.3, 1, 1.3] });
   return {
     version: 1,
+    discoverable: false,
     name: "My little universe",
     ownerName: "Your name",
     tagline: "A few things I made. A world of things to explore.",
@@ -334,6 +408,9 @@ export function starterWorld(): World {
     ground: "#a9ba94",
     water: "#8ebec4",
     lighting: "day",
+    terrain: terrainSchema.parse({}),
+    weather: weatherSchema.parse({}),
+    character: characterSchema.parse({}),
     objects,
   };
 }

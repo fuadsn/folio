@@ -156,6 +156,7 @@ export function TouchControls({
             }}
             onPointerUp={() => release(String(key))}
             onPointerCancel={() => release(String(key))}
+            onLostPointerCapture={() => release(String(key))}
           >
             <I size={20} />
           </button>

@@ -1,5 +1,8 @@
 "use client";
 import PartsEditor from "./parts-editor";
+import { EnvironmentEditor, CharacterEditor } from "./environment-editor";
+import ObjectDetailsEditor from "./object-details";
+import type { TerrainBrush } from "../lib/terrain";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Box,
@@ -29,6 +32,8 @@ import {
   MousePointer2,
   Magnet,
   Sun,
+  Moon,
+  Mountain,
   Compass,
   HelpCircle,
   X,
@@ -56,8 +61,12 @@ import {
 import type { WorldScene } from "../lib/scene";
 import WorldCanvas from "./world-canvas";
 import AssetArt from "./asset-art";
-import { Modal, Story, PortfolioList, TouchControls } from "./ui";
+import { Modal, Story, PortfolioList } from "./ui";
+import PlayControls from "./play-controls";
+import VehicleEditor from "./vehicle-editor";
+import { isVehicle, vehiclePlacement, emptyVehicleHUD } from "../lib/vehicles";
 import Forge from "./forge";
+import WorldDirectory from "./world-directory";
 
 async function api(path: string, options: RequestInit = {}) {
   const res = await fetch(path, {
@@ -95,6 +104,9 @@ export default function Studio() {
     [category, setCategory] = useState("All"),
     [search, setSearch] = useState(""),
     [selected, setSelected] = useState<string | null>(null);
+  const [brush, setBrush] = useState<TerrainBrush | null>(null);
+  const [vehicle, setVehicle] = useState(emptyVehicleHUD);
+  const [startVehicle, setStartVehicle] = useState<string | null>(null);
   const [tool, setTool] = useState<"translate" | "rotate" | "scale">(
       "translate",
     ),
@@ -245,7 +257,23 @@ export default function Studio() {
       if (!worldRef.current) return;
       if (worldRef.current.objects.length >= 150)
         return notify("This world has reached the demo limit of 150 objects.");
-      const object = { ...newObject(kind, pos ?? [0, 0, 0]), ...extra };
+      const placement =
+        pos ??
+        (isVehicle(kind)
+          ? vehiclePlacement(worldRef.current, kind)
+          : ([0, 0, 0] as [number, number, number]));
+      const object = {
+        ...newObject(kind, placement),
+        ...(isVehicle(kind)
+          ? {
+              rotation:
+                kind === "boat"
+                  ? (Math.atan2(placement[0], placement[2]) * 180) / Math.PI
+                  : 180,
+            }
+          : {}),
+        ...extra,
+      };
       commit({
         ...worldRef.current,
         objects: [...worldRef.current.objects, object],
@@ -302,7 +330,10 @@ export default function Studio() {
         e.shiftKey ? redo() : undo();
       }
       if (playing) {
-        if (e.key === "Escape") setPlaying(false);
+        if (e.key === "Escape") {
+          setStartVehicle(null);
+          setPlaying(false);
+        }
         return;
       }
       if (e.key === "v") setTool("translate");
@@ -413,9 +444,12 @@ export default function Studio() {
         ? status
         : "Unsaved";
   return (
-    <main className={`studio ${playing ? "is-playing" : ""}`}>
+    <main
+      className={`studio ${playing ? "is-playing" : ""}`}
+      data-theme={world.lighting === "night" ? "dark" : "light"}
+    >
       <header className="topbar">
-        <a className="brand" href="/">
+        <a className="brand" href="/editor">
           <span className="brand-icon">
             <Box size={22} strokeWidth={1.6} />
           </span>
@@ -429,6 +463,41 @@ export default function Studio() {
           </span>
         </div>
         <div className="top-actions">
+          <div
+            className="day-night"
+            aria-label="World lighting and editor theme"
+          >
+            <button
+              aria-label="Light mode — day"
+              aria-pressed={world.lighting !== "night"}
+              onClick={() => commit({ ...world, lighting: "day" })}
+            >
+              <Sun size={14} />
+              <span>Day</span>
+            </button>
+            <button
+              aria-label="Dark mode — night"
+              aria-pressed={world.lighting === "night"}
+              onClick={() => commit({ ...world, lighting: "night" })}
+            >
+              <Moon size={14} />
+              <span>Night</span>
+            </button>
+          </div>
+          <button
+            className="button explore-link"
+            onClick={async () => {
+              try {
+                await save();
+                window.location.assign("/");
+              } catch (e) {
+                notify((e as Error).message);
+              }
+            }}
+          >
+            <Compass size={15} />
+            Explore
+          </button>
           <button
             className={`save-status ${saveStatus === "Save failed" ? "failed" : ""}`}
             onClick={() => save().catch((e) => notify(e.message))}
@@ -445,7 +514,10 @@ export default function Studio() {
           </button>
           <button
             className="button preview"
-            onClick={() => setPlaying(!playing)}
+            onClick={() => {
+              setStartVehicle(null);
+              setPlaying(!playing);
+            }}
           >
             {playing ? <X size={15} /> : <Play size={15} />}{" "}
             {playing ? "Back to editor" : "Play preview"}
@@ -457,6 +529,12 @@ export default function Studio() {
             Publish world
             <ArrowUpRight size={15} />
           </button>
+          <button
+            className="button network-button"
+            onClick={() => setModal("worlds")}
+          >
+            <Globe size={15} /> Worlds
+          </button>
         </div>
       </header>
       {!playing && (
@@ -464,6 +542,8 @@ export default function Studio() {
           <nav className="rail" aria-label="Studio sections">
             {[
               ["library", Blocks, "Build"],
+              ["terrain", Mountain, "Terrain"],
+              ["character", User, "Character"],
               ["world", Globe, "World"],
               ["layers", Layers, "Objects"],
               ["forge", Sparkles, "Create"],
@@ -473,7 +553,10 @@ export default function Studio() {
                 <button
                   key={String(id)}
                   className={tab === id ? "active" : ""}
-                  onClick={() => setTab(String(id))}
+                  onClick={() => {
+                    setTab(String(id));
+                    if (id !== "terrain") setBrush(null);
+                  }}
                   aria-label={String(label)}
                 >
                   <I size={21} strokeWidth={1.6} />
@@ -490,6 +573,24 @@ export default function Studio() {
             </button>
           </nav>
           <aside className="library-panel">
+            {tab === "terrain" && (
+              <EnvironmentEditor
+                world={world}
+                onChange={commit}
+                brush={brush}
+                setBrush={setBrush}
+              />
+            )}
+            {tab === "character" && (
+              <CharacterEditor
+                world={world}
+                onChange={commit}
+                onPlay={() => {
+                  setStartVehicle(null);
+                  setPlaying(true);
+                }}
+              />
+            )}
             {tab === "library" && (
               <>
                 <div className="panel-title">
@@ -511,17 +612,22 @@ export default function Studio() {
                   />
                 </div>
                 <div className="categories">
-                  {["All", "Buildings", "Nature", "Objects", "Shapes"].map(
-                    (c) => (
-                      <button
-                        key={c}
-                        onClick={() => setCategory(c)}
-                        className={category === c ? "active" : ""}
-                      >
-                        {c}
-                      </button>
-                    ),
-                  )}
+                  {[
+                    "All",
+                    "Buildings",
+                    "Nature",
+                    "Vehicles",
+                    "Objects",
+                    "Shapes",
+                  ].map((c) => (
+                    <button
+                      key={c}
+                      onClick={() => setCategory(c)}
+                      className={category === c ? "active" : ""}
+                    >
+                      {c}
+                    </button>
+                  ))}
                 </div>
                 <div className="library-subhead">
                   <span>
@@ -664,7 +770,7 @@ export default function Studio() {
                   </label>
                   {[
                     ["sky", "Sky"],
-                    ["ground", "Grass"],
+                    ["ground", "Ground"],
                     ["water", "Water"],
                   ].map(([key, label]) => (
                     <label className="color-field" key={key}>
@@ -728,18 +834,27 @@ export default function Studio() {
           onTransform={updateObject}
           onOpen={setStory}
           onNear={setNear}
+          onVehicle={setVehicle}
+          startVehicle={startVehicle}
           onDrop={(kind, pos) => add(kind, pos)}
           onReady={(e) => (engine.current = e)}
           frozen={!!story || showList || !!modal}
+          onTravel={() => setModal("worlds")}
+          brush={playing ? null : brush}
+          onTerrain={(terrain) => {
+            if (worldRef.current) commit({ ...worldRef.current, terrain });
+          }}
         />
         {!playing ? (
           <>
             <div className="stage-heading">
               <span className="small-dot" /> THE CANVAS IS YOURS{" "}
               <p>
-                {selected
-                  ? "Make it feel like you."
-                  : "Start small. Build something that feels like you."}
+                {brush
+                  ? `${brush.tool.toUpperCase()} · drag across the ground`
+                  : selected
+                    ? "Make it feel like you."
+                    : "Start small. Build something that feels like you."}
               </p>
             </div>
             <div className="stage-badge">
@@ -829,8 +944,10 @@ export default function Studio() {
             </div>
             <div className="stage-bottom">
               <span>
-                <MousePointer2 size={12} /> Drag to orbit · Right-drag to pan ·
-                Scroll to zoom
+                <MousePointer2 size={12} />{" "}
+                {brush
+                  ? "Drag to sculpt · Right-drag to orbit · Scroll to zoom"
+                  : "Drag to orbit · Right-drag to pan · Scroll to zoom"}
               </span>
               <span>{world.objects.length} objects</span>
             </div>
@@ -844,24 +961,23 @@ export default function Studio() {
                 Portfolio view
               </button>
             </div>
-            <div className="play-hint">
-              {nearest ? (
-                <button onClick={() => setStory(nearest.id)}>
-                  <kbd>E</kbd> Explore {nearest.name}
-                </button>
-              ) : (
-                <span>
-                  <kbd>W</kbd>
-                  <kbd>A</kbd>
-                  <kbd>S</kbd>
-                  <kbd>D</kbd> to move · click a building to discover its story
-                </span>
-              )}
-            </div>
-            <TouchControls
-              press={(k) => engine.current?.keys.add(k)}
-              release={(k) => engine.current?.keys.delete(k)}
-            />
+            {!vehicle.active && (
+              <div className="play-hint">
+                {nearest ? (
+                  <button onClick={() => setStory(nearest.id)}>
+                    <kbd>E</kbd> Explore {nearest.name}
+                  </button>
+                ) : (
+                  <span>
+                    <kbd>W</kbd>
+                    <kbd>A</kbd>
+                    <kbd>S</kbd>
+                    <kbd>D</kbd> move · Shift run · Space jump · E interact
+                  </span>
+                )}
+              </div>
+            )}
+            <PlayControls engine={engine} vehicle={vehicle} />
           </>
         )}
       </section>
@@ -914,6 +1030,42 @@ export default function Studio() {
                       }
                     />
                   </label>
+                )}
+                {!object.parts && !object.asset && (
+                  <ObjectDetailsEditor
+                    object={object}
+                    onChange={(details) => updateObject(object.id, { details })}
+                    onPieces={async () => {
+                      const { modelParts } = await import("../lib/models");
+                      const current = worldRef.current?.objects.find(
+                        (o) => o.id === object.id,
+                      );
+                      if (!current) return;
+                      updateObject(current.id, {
+                        parts: modelParts(current.kind, current.color, {
+                          ...current.details,
+                          snow:
+                            current.details.snow ??
+                            (worldRef.current?.terrain.biome === "tundra"
+                              ? 0.72
+                              : 0),
+                        }),
+                      });
+                      notify(
+                        "Individual pieces unlocked. Undo restores the original model.",
+                      );
+                    }}
+                  />
+                )}
+                {isVehicle(object.kind) && (
+                  <VehicleEditor
+                    object={object}
+                    onChange={(patch) => updateObject(object.id, patch)}
+                    onTest={() => {
+                      setStartVehicle(object.id);
+                      setPlaying(true);
+                    }}
+                  />
                 )}
                 <div className="section-label">MAKE IT INTERACTIVE</div>
                 <label>
@@ -987,6 +1139,10 @@ export default function Studio() {
                   </>
                 )}
                 <div className="section-label">POSITION & SIZE</div>
+                <p className="fineprint">
+                  Y is height above the terrain. Objects follow the ground as
+                  you sculpt.
+                </p>
                 <div className="triple-fields">
                   {["X", "Y", "Z"].map((axis, i) => (
                     <label key={axis}>
@@ -1051,6 +1207,43 @@ export default function Studio() {
                     onChange={(parts) => updateObject(object.id, { parts })}
                   />
                 )}
+                <div className="triple-fields">
+                  {["X", "Y", "Z"].map((axis, i) => (
+                    <label key={axis}>
+                      Scale {axis}
+                      <input
+                        aria-label={`Scale ${axis}`}
+                        type="number"
+                        min=".2"
+                        max="5"
+                        step=".1"
+                        value={object.scale[i]}
+                        onChange={(e) => {
+                          const scale = [...object.scale] as [
+                            number,
+                            number,
+                            number,
+                          ];
+                          scale[i] = Math.max(
+                            0.2,
+                            Math.min(5, +e.target.value),
+                          );
+                          updateObject(object.id, { scale });
+                        }}
+                      />
+                    </label>
+                  ))}
+                </div>
+                <label className="check-field">
+                  <input
+                    type="checkbox"
+                    checked={object.collidable}
+                    onChange={(e) =>
+                      updateObject(object.id, { collidable: e.target.checked })
+                    }
+                  />
+                  Solid for the character
+                </label>
                 <div className="row-buttons">
                   <button className="button" onClick={duplicate}>
                     <Copy size={14} />
@@ -1200,6 +1393,22 @@ export default function Studio() {
               Publishing captures your current world and stories. Keep
               experimenting in your draft, then publish again when you’re ready.
             </p>
+            <label className="network-opt-in">
+              <input
+                type="checkbox"
+                checked={world.discoverable}
+                onChange={(event) =>
+                  commit({ ...world, discoverable: event.target.checked })
+                }
+              />
+              <span>
+                <strong>Join the world network</strong>
+                <small>
+                  Let visitors discover your published portfolio and travel here
+                  from other worlds. Uncheck and republish to become unlisted.
+                </small>
+              </span>
+            </label>
             <div className="publish-checks">
               {essentials.map((e) => (
                 <div key={e.role}>
@@ -1275,6 +1484,17 @@ export default function Studio() {
           </div>
         </Modal>
       )}
+      {modal === "worlds" && (
+        <Modal
+          title="Travel to another world"
+          onClose={() => setModal("")}
+          wide
+        >
+          <WorldDirectory
+            currentId={publishedAt ? worldId.current : undefined}
+          />
+        </Modal>
+      )}
       {modal === "clear" && (
         <Modal title="A clean canvas?" onClose={() => setModal("")}>
           <div className="help-content">
@@ -1329,6 +1549,16 @@ export default function Studio() {
               <dd>
                 Upload a self-contained .GLB under 15 MB. It becomes an object
                 you can place and give a story.
+              </dd>
+              <dt>Cars, boats & planes</dt>
+              <dd>
+                Build → Vehicles, then Test drive. <kbd>F</kbd> enter / exit ·{" "}
+                <kbd>W S</kbd> throttle / slow · <kbd>A D</kbd> steer ·{" "}
+                <kbd>B</kbd> brake. Cars: <kbd>Space</kbd> + steer to drift;
+                open Radio for music. Planes: <kbd>Space</kbd> climb,{" "}
+                <kbd>C</kbd> descend. Stop before exiting; boats need a nearby
+                shore. Return to spawn resets the ride without changing your
+                saved layout.
               </dd>
             </dl>
           </div>

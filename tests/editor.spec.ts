@@ -4,12 +4,14 @@ import { starterWorld, newObject } from "../lib/world";
 test("studio renders its world without client errors", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/editor");
   await expect(
     page.getByRole("button", { name: "Publish world", exact: true }),
   ).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
-  await expect(page.getByText("21 objects", { exact: true })).toBeVisible();
+  await expect(
+    page.locator(".library-subhead").getByText("25 objects", { exact: true }),
+  ).toBeVisible();
   await page.screenshot({ path: "test-results/studio-desktop.png" });
   expect(errors).toEqual([]);
 });
@@ -18,9 +20,10 @@ test("edit, undo, upload, back up, publish a snapshot, and unpublish", async ({
   page,
   browser,
 }) => {
+  test.setTimeout(90000);
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
-  await page.goto("/");
+  await page.goto("/editor");
   await expect(
     page.getByRole("button", { name: "Publish world", exact: true }),
   ).toBeVisible();
@@ -185,15 +188,17 @@ test("edit, undo, upload, back up, publish a snapshot, and unpublish", async ({
       hasTouch: true,
     });
     const visitor = await guest.newPage();
+    visitor.on("pageerror", (error) => errors.push(error.message));
     try {
       expect(
-        (await guest.request.get("http://127.0.0.1:5173/api/world")).status(),
+        (await guest.request.get("http://127.0.0.1:5174/api/world")).status(),
       ).toBe(401);
-      await visitor.goto(`http://127.0.0.1:5173${path}`);
+      await visitor.goto(`http://127.0.0.1:5174${path}`);
       await expect(
         visitor.getByRole("heading", { name: "Demo Builder" }),
       ).toBeVisible();
-      await expect(visitor.locator("canvas")).toBeVisible();
+      // A second cold WebGL context can take longer under software rendering.
+      await expect(visitor.locator("canvas")).toBeVisible({ timeout: 15000 });
       await visitor.screenshot({ path: "test-results/published-mobile.png" });
       await visitor.getByRole("button", { name: "View portfolio" }).click();
       await expect(
@@ -225,12 +230,12 @@ test("edit, undo, upload, back up, publish a snapshot, and unpublish", async ({
         .click();
       await expect(link).not.toBeVisible();
       expect(
-        (await guest.request.get(`http://127.0.0.1:5173${path}`)).status(),
+        (await guest.request.get(`http://127.0.0.1:5174${path}`)).status(),
       ).toBe(404);
       expect(
         (
           await guest.request.get(
-            `http://127.0.0.1:5173/api/assets/${uploaded.asset}`,
+            `http://127.0.0.1:5174/api/assets/${uploaded.asset}`,
           )
         ).status(),
       ).toBe(404);
@@ -252,7 +257,7 @@ test("edit, undo, upload, back up, publish a snapshot, and unpublish", async ({
 test("missing credentials never charge credits or simulate generation", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/editor");
   await page.getByRole("button", { name: "Create", exact: true }).click();
   const before = await (await page.request.get("/api/generate")).json();
   test.skip(!!before.provider, "This test covers the unconfigured state only.");
@@ -273,7 +278,7 @@ test("missing credentials never charge credits or simulate generation", async ({
 test("Saved always refers to the latest draft, including an edit during a write", async ({
   page,
 }) => {
-  await page.goto("/");
+  await page.goto("/editor");
   await page.getByRole("button", { name: "World", exact: true }).click();
   const original = await page
     .getByLabel("World name", { exact: true })

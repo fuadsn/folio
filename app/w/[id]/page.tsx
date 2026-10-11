@@ -17,6 +17,9 @@ export default async function WorldPage({
     .first();
   if (!row) notFound();
   return (
-    <Viewer world={worldSchema.parse(JSON.parse(row.published as string))} />
+    <Viewer
+      world={worldSchema.parse(JSON.parse(row.published as string))}
+      worldId={id}
+    />
   );
 }
