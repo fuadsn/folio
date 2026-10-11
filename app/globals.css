@@ -2931,3 +2931,10 @@ a:focus-visible {
     flex-wrap: wrap;
   }
 }
+/* Authored NPC conversations share the editor's cream-first palette. */
+.npc-dialogue { display: grid; gap: 18px; padding: 24px; }
+.npc-speech, .npc-answer p { white-space: pre-wrap; line-height: 1.65; margin: 0; }
+.npc-choices { display: grid; gap: 8px; }
+.npc-choices .button { white-space: normal; text-align: left; justify-content: flex-start; }
+.npc-answer { display: grid; gap: 14px; padding: 16px; border: 1px solid var(--line); border-radius: 12px; }
+.npc-choice-editor { border-top: 1px solid var(--line); padding-top: 14px; }

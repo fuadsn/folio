@@ -61,7 +61,9 @@ import {
 import type { WorldScene } from "../lib/scene";
 import WorldCanvas from "./world-canvas";
 import AssetArt from "./asset-art";
-import { Modal, Story, PortfolioList } from "./ui";
+import { Modal, PortfolioList } from "./ui";
+import ObjectInteraction from "./npc-dialog";
+import NpcEditor from "./npc-editor";
 import PlayControls from "./play-controls";
 import VehicleEditor from "./vehicle-editor";
 import { isVehicle, vehiclePlacement, emptyVehicleHUD } from "../lib/vehicles";
@@ -622,6 +624,7 @@ export default function Studio() {
                     "Buildings",
                     "Nature",
                     "Vehicles",
+                    "People",
                     "Objects",
                     "Shapes",
                   ].map((c) => (
@@ -970,7 +973,7 @@ export default function Studio() {
               <div className="play-hint">
                 {nearest ? (
                   <button onClick={() => setStory(nearest.id)}>
-                    <kbd>E</kbd> Explore {nearest.name}
+                    <kbd>E</kbd> {nearest.kind === "npc" ? "Talk to" : "Explore"} {nearest.name}
                   </button>
                 ) : (
                   <span>
@@ -1054,7 +1057,7 @@ export default function Studio() {
                             (worldRef.current?.terrain.biome === "tundra"
                               ? 0.72
                               : 0),
-                        }),
+                        }, current.npc),
                       });
                       notify(
                         "Individual pieces unlocked. Undo restores the original model.",
@@ -1062,6 +1065,11 @@ export default function Studio() {
                     }}
                   />
                 )}
+                {object.kind === "npc" && <NpcEditor
+                  object={object} world={world}
+                  onChange={(npc) => updateObject(object.id, { npc })}
+                  onPreview={() => setStory(object.id)}
+                />}
                 {isVehicle(object.kind) && (
                   <VehicleEditor
                     object={object}
@@ -1572,7 +1580,7 @@ export default function Studio() {
           </div>
         </Modal>
       )}
-      {openStory && <Story object={openStory} onClose={() => setStory(null)} />}{" "}
+      {openStory && <ObjectInteraction object={openStory} world={world} onOpen={setStory} onClose={() => setStory(null)} />}{" "}
       {showList && (
         <PortfolioList world={world} onClose={() => setShowList(false)} />
       )}

@@ -33,6 +33,72 @@ const themes = [
   },
 ];
 
+function makeDetails(theme) {
+  const objects = [];
+  const add = (key, kind, x, z, values = {}) => objects.push({
+    id: `${theme.slug}-detail-${key}`, kind, name: key, color: theme.accent,
+    position: [x, 0, z], rotation: 0, scale: [1, 1, 1],
+    role: "none", title: "", text: "", url: "", ...values,
+  });
+  const guideNames = theme.slug === "dune" ? ["Riley", "Axel", "Jules"]
+    : theme.slug === "aurora" ? ["Nova", "Echo", "Iris"] : ["Kai", "Reef", "Sage"];
+  const guide = (key, name, x, z, greeting, choices) => add(key, "npc", x, z, {
+    name, npc: { skin: "#bf8b65", hat: "#f4ae52", hatStyle: theme.slug === "aurora" ? "beanie" : "cap", motion: "wave", greeting, choices },
+  });
+  guide("welcome", guideNames[0], 4.5, 7,
+    `Hey! I'm ${guideNames[0]}, the fictional guide to ${theme.name}. Want a tour, a project, or a ride?`, [
+      { label: "Who made this world?", answer: "This is a fictional sample portfolio showing what you can build in Worldfolio. Here's the creator introduction.", targetId: `${theme.slug}-1` },
+      { label: "Show me a project", answer: `Let's explore ${theme.project[0]}. The project kiosk and gallery tell its story.`, targetId: `${theme.slug}-2` },
+      { label: "Where can I drive?", answer: "The car beside us is ready: F to get in, W/A/S/D to drive, B to brake. The broad loop circles the island. The west runway has a plane; P opens other worlds. Vehicles stay here when you travel." },
+    ]);
+  guide("mechanic", guideNames[1], -18.5, 30,
+    theme.slug === "tide" ? "Welcome to the island workshop. Looking for the harbor?" : "Welcome to the workshop. Ready for a trip?", [
+      { label: "Give me a driving tip", answer: theme.slug === "dune" ? "Build some speed, hold Space and steer to drift. Release Space to regain grip. The road is optional; steep cliffs and deep water still block cars." : "Drive the loop or explore off-road. For the plane, head west to the runway, accelerate with W, then hold Space to climb. Slow down and land before exiting." },
+      { label: "What's in the workshop?", answer: "A sample build log and a breakdown of the prototype. This workshop is a story facade, not a vehicle-repair simulator.", targetId: `${theme.slug}-detail-workshop` },
+      ...(theme.slug === "tide" ? [{ label: "Where is the boat?", answer: "The boat is in the inlet east of the village, near the gallery. Walk close to the shore and press F. Head east to the ocean; stop near dry land to get out." }] : []),
+    ]);
+  guide("curator", guideNames[2], 14, -20,
+    "I'm the gallery guide. Every building can hold a story; here's where to start.", [
+      { label: "Show the case study", answer: theme.remote[1], targetId: `${theme.slug}-5` },
+      { label: "What skills are featured?", answer: "The journey board contains an illustrative skill map, not a real employment history.", targetId: `${theme.slug}-3` },
+      { label: "How do I contact the creator?", answer: "This demo has no real inbox. Your own Contact building can hold your email or website.", targetId: `${theme.slug}-4` },
+    ]);
+  add("workshop", "garage", -15, 32, {
+    name: theme.slug === "dune" ? "Pit workshop" : theme.slug === "aurora" ? "Research workshop" : "Harbor workshop",
+    role: "project", title: "Inside the prototype",
+    text: `Fictional ${theme.name} build log: start with a clear visitor route, add a landmark at each decision point, then prototype the interaction. The workshop represents the making process; its door is a facade. All these objects can be placed and edited in your own world.`,
+  });
+  add("project-screen", "kiosk", 9, -7, {
+    name: "Project kiosk", role: "project", title: "Prototype breakdown",
+    text: `${theme.project[0]} — fictional concept.\n\nChallenge: make a portfolio understandable without forcing a linear route.\n\nApproach: one central welcome area, readable landmarks, a short guide conversation and a drive to the next story.\n\nExplore: the gallery holds the main project, the journey board covers skills, and the cafe contains contact information.`,
+  });
+  add("welcome-screen", "kiosk", -8, -1, {
+    name: "Visitor information", role: "about", title: "Find your way around",
+    text: "W/A/S/D to walk, Shift to run, Space to jump. Click a guide or press E nearby to talk. F enters a nearby vehicle. P opens the world directory. The NPCs have creator-authored dialogue, not live AI responses.",
+  });
+  add("terrace", "picnic", 16, 25, { name: "Cafe terrace" });
+  add("camp-table", "picnic", -16, 17, { name: "Camp meeting table" });
+  add("fire", "campfire", -14, 23, { name: "Campfire circle" });
+  add("camp-bench", "bench", -11, 23, { name: "Fireside bench", rotation: 90 });
+  for (const [i, x, z] of [[1, -19, 35], [2, -20, 37], [3, -11, 35]])
+    add(`supply-${i}`, "crate", x, z, { name: "Workshop supplies" });
+  add("workshop-light", "lamp", -10, 29, { name: "Workshop light", color: "#f4ae52" });
+  if (theme.slug === "dune") {
+    for (let i = 0; i < 4; i++) for (const side of [-1, 1])
+      add(`track-${side}-${i}`, "flag", side * 6, 38 + i * 10, { name: "Practice lane flag" });
+  } else if (theme.slug === "aurora") {
+    add("field-station", "observatory", -44, 28, { name: "Field research station", role: "project", title: "Reading the night sky", text: "A fictional field-station exhibit about turning complex observations into approachable visual stories. Talk to Nova near spawn to open the main case study." });
+    add("field-supplies", "crate", -40, 32, { name: "Research equipment" });
+    add("field-light", "lamp", -39, 26, { name: "Field station light", color: "#f4ae52" });
+  } else {
+    add("harbor-bench", "bench", 12, -3, { name: "Harbor lookout", rotation: 90 });
+    add("beach-table", "picnic", 25, 32, { name: "Palm terrace" });
+    add("beach-palm", "palm", 29, 31, { name: "Terrace palm", color: "#79a374", scale: [1.5, 1.5, 1.5] });
+    add("flower-bed", "flowers", 17, 28, { name: "Cafe garden", color: "#e8a3b7", collidable: false, scale: [2, 1, 2] });
+  }
+  return objects;
+}
+
 function makeWorld(theme) {
   const n = 64, width = 256, heights = [], paint = [];
   for (let row = 0; row <= n; row++) {
@@ -99,7 +165,7 @@ function makeWorld(theme) {
     terrain: { biome: theme.biome, width, depth: width, waterLevel: -1.6, paths: true, heights, paint },
     weather: { type: theme.weather, intensity: 0.35, wind: 0.15 },
     character: { spawn: [2.8, 10], coat: theme.accent, hat: "#f4ae52" },
-    objects,
+    objects: [...objects, ...makeDetails(theme)],
   };
 }
 
@@ -118,4 +184,17 @@ export function demoSeedSQL(now = new Date().toISOString()) {
     // Reuse one literal to stay under D1's SQL-statement size limit.
     return `INSERT INTO worlds(id,owner,draft,published,revision,published_at,updated_at) SELECT ${quote(id)},${quote(owner)},snapshot,snapshot,0,${quote(now)},${quote(now)} FROM (SELECT ${snapshot} AS snapshot) WHERE true ON CONFLICT DO NOTHING;`;
   }).join("\n");
+}
+
+// Explicit, additive upgrade for the three reserved demos only. Existing
+// objects/stories/terrain and unpublished status are preserved in both snapshots.
+export function demoDetailsSQL(now = new Date().toISOString()) {
+  if (!Number.isFinite(Date.parse(now))) throw new Error("Invalid seed timestamp");
+  const quote = (value) => `'${value.replaceAll("'", "''")}'`;
+  return demoWorlds.flatMap(({ id, owner }, index) => makeDetails(themes[index]).flatMap((object) =>
+    ["draft", "published"].map((column) => {
+      const publication = column === "published" ? `,published_at=${quote(now)}` : ",revision=revision+1";
+      return `UPDATE worlds SET ${column}=json_insert(${column},'$.objects[#]',json(${quote(JSON.stringify(object))})),updated_at=${quote(now)}${publication} WHERE id=${quote(id)} AND owner=${quote(owner)} AND ${column} IS NOT NULL AND json_array_length(${column},'$.objects') < 150 AND NOT EXISTS(SELECT 1 FROM json_each(${column},'$.objects') WHERE json_extract(value,'$.id')=${quote(object.id)});`;
+    }),
+  )).join("\n");
 }

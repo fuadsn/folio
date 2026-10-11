@@ -4,7 +4,8 @@ import { Box, Menu, ArrowUpRight, Pencil, Globe } from "lucide-react";
 import type { World } from "../lib/world";
 import type { WorldScene } from "../lib/scene";
 import WorldCanvas from "./world-canvas";
-import { Story, PortfolioList, Modal } from "./ui";
+import { PortfolioList, Modal } from "./ui";
+import ObjectInteraction from "./npc-dialog";
 import WorldDirectory from "./world-directory";
 import PlayControls from "./play-controls";
 import { emptyVehicleHUD } from "../lib/vehicles";
@@ -79,7 +80,7 @@ export default function Viewer({
         <div className="play-hint">
           {nearest ? (
             <button onClick={() => setStory(nearest.id)}>
-              <kbd>E</kbd> Explore {nearest.name}
+              <kbd>E</kbd> {nearest.kind === "npc" ? "Talk to" : "Explore"} {nearest.name}
             </button>
           ) : (
             <span>
@@ -99,7 +100,7 @@ export default function Viewer({
         Made with Worldfolio
         <ArrowUpRight size={13} />
       </a>
-      {object && <Story object={object} onClose={() => setStory(null)} />}{" "}
+      {object && <ObjectInteraction object={object} world={world} onOpen={setStory} onClose={() => setStory(null)} />}{" "}
       {list && <PortfolioList world={world} onClose={() => setList(false)} />}
       {travel && (
         <Modal

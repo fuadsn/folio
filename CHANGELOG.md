@@ -4,6 +4,14 @@ Record each meaningful project change during the event, newest first. Update thi
 
 ## Event build log
 
+## 2026-10-11T10:27:20+05:30 — NPC guides and populated demo scenes
+
+- Changed: Added NPC guides with editable appearance, authored greetings, six dialogue choices and story links. Guides turn/wave, respond to click/E/touch, pause movement during conversations and handle missing links. Added project kiosks, workshop facades, picnic tables, campfires and supply crates; built-in pieces remain editable. Populated each demo with three guides and themed scene details; added an explicit, additive `--add-details` local upgrade.
+- Why: Make the sample portfolios feel inhabited and give creators reusable interactive components in the editor.
+- Validation: All 42 regression tests passed. After the final portal-spacing adjustment, nine focused NPC/network tests, typecheck and build passed again. Desktop/mobile screenshots inspected. Added 57 detail objects, including nine NPCs, across the three local demos; original sample content and creator content preserved. A repeat upgrade left all three demo rows unchanged. Verified conversations and linked-story choices on all three actual local pages.
+- Corrections: Screenshot review caught a guide overlapping a portal; moved it and added NPC clearance checks. Normalized signed zero in JSON round-trip test expectations. Counted snapshot additions through database queries because Wrangler's local metadata omitted change counts.
+- Limitations: Authored dialogue only; no AI calls, wandering/pathfinding, repair simulation or enterable workshop interiors. Piece conversion freezes NPC animation but keeps dialogue. Localhost only. This follow-up is recorded at its real time after the documented event wrap-up; no submission or eligibility claim.
+
 ## 2026-10-11T09:37:22+05:30 — Local sample portfolio worlds
 
 - Changed: Added three original fictional 256 × 256 m portfolios: Dune Circuit (desert/drifting), Aurora Outpost (snow/night) and Tide Studio (tropical harbor). Each includes real in-app story content, a spawn car, a survey plane, a loop road and portal navigation. Added `npm run seed:worlds`, shared deterministic sample data, isolated regression coverage and local demo instructions.

@@ -23,7 +23,7 @@ The home page (also `/play`) is the clean, playable draft. Open `/editor` for th
 
 ## What works
 
-- 21 placeable building, nature, prop, and geometric objects; click or drag to add.
+- 31 placeable objects, including buildings, nature, props, shapes, vehicles and NPC guides; click or drag to add.
 - 3D move/rotate/scale handles, grid snapping, numerical transforms, duplicate, delete, undo/redo.
 - Editable world name, owner, introduction, colors and day/sunset/night atmosphere. An optional empty landscape, with undo.
 - Cream-first editor palette (`#FEF3E2`, `#F4AE52`, `#D4621A`, `#2A1A0E`). Light mode is world daylight; dark mode is world nighttime.
@@ -41,6 +41,14 @@ The home page (also `/play`) is the clean, playable draft. Open `/editor` for th
 - JSON export/import for layout and stories. GLB files remain in their original account on this server.
 - Optional Gemini/OpenAI building generation into validated, editable 3D primitives; no generated executable code.
 - Optional Stripe Checkout for 10-credit packs; verified webhooks grant credits exactly once.
+
+## NPC guides & scene components
+
+Choose **Build → People → NPC guide** to add a character. Edit its name and outfit color, then use **NPC appearance & dialogue** for skin, hat, animation, greeting and up to six question/answer choices. A choice can link to an existing portfolio story. **Preview conversation** lets you try it in the editor; autosave, backups and published snapshots include NPC settings.
+
+Visitors click a guide, press **E** nearby, or tap **Talk to …**. Nearby guides turn and wave unless set to stand still. Dialogue pauses movement; linked stories open without navigating away. Deleted story links show an unavailable message. NPCs use authored dialogue, not AI chat, and do not roam or perform tasks. Unlocking an NPC's individual pieces freezes its pose but retains its conversation.
+
+The collection also includes **Project kiosk**, **Workshop garage**, **Picnic table**, **Campfire** and **Supply crate**. Kiosks and workshop facades can open project stories; the other props can be assigned any portfolio role. These are editable low-poly components, not a repair/crafting system or enterable building interiors.
 
 ## Larger driving worlds
 
@@ -77,6 +85,8 @@ After initializing the local database, run `npm run seed:worlds`. Open http://12
 - **Tide Studio · Demo** — a sunny palm-lined design island, a cruiser and a motor boat in a navigable harbor channel.
 
 Each is 256 × 256 m, has the four essential portfolio sections, a car beside spawn, a survey plane on the west runway and a world portal. Press **F** beside the car to drive; **P** opens the directory. The samples use only built-in geometry; no API key, external model, music download or real person's information is needed. The harbor boat faces east toward open ocean.
+
+Each sample also includes three NPCs (welcome guide, mechanic and curator), project/info kiosks, a workshop, a campsite and supplies. Dune adds a flagged practice lane, Aurora adds a field-research station, and Tide adds harbor seating and a palm terrace. To add these details to previously seeded samples, run **`npm run seed:worlds -- --add-details`**. This explicitly appends missing detail objects to the three reserved demo records only, preserving existing objects, terrain and stories. It never publishes an unpublished sample or edits your account's world. Repeating it does not duplicate objects or reset edited NPCs. The 150-object cap still applies; full snapshots skip additions.
 
 The seed command is **local-only and insert-only**: it neither replaces your world nor publishes your draft, and reruns leave existing samples unchanged. It uses three reserved demo owners, separate from the one mock local account; the samples are visitor destinations, not additional signed-in users or editable drafts for your account. They are never substituted for failed/empty API responses. No automatic seeding or hosting deployment occurs. For an isolated initialized test state, `npm run seed:worlds -- --persist-to /absolute/path/to/local-state` uses the same local-only behavior. The test suite includes its own copies in the temporary port-5174 database.
 

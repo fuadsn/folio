@@ -46,6 +46,7 @@ export class WorldScene {
   orbit: OrbitControls;
   gizmo: TransformControls;
   objects = new T.Group();
+  npcActors: { object: WorldObject; group: T.Group }[] = [];
   portal = travelPortal();
   land = new T.Group();
   selection = new T.BoxHelper(new T.Group(), 0xd4621a);
@@ -334,12 +335,8 @@ export class WorldScene {
         this.enterVehicle(item.id);
         return;
       }
-      if (
-        o &&
-        this.world?.objects.find((x) => x.id === o!.userData.objectId)?.role !==
-          "none"
-      )
-        this.cb.open(o.userData.objectId);
+      if (item && (item.kind === "npc" || item.role !== "none"))
+        this.cb.open(item.id);
     } else this.cb.select(o?.userData.objectId ?? null);
   };
   setPointer(x: number, y: number) {
@@ -472,6 +469,7 @@ export class WorldScene {
           .forEach(disposeObject);
       this.objects.remove(c);
     }
+    this.npcActors = [];
     for (const object of world.objects) {
       const group = new T.Group();
       group.userData.objectId = object.id;
@@ -495,19 +493,22 @@ export class WorldScene {
             snow:
               object.details.snow ??
               (world.terrain.biome === "tundra" ? 0.72 : 0),
-          }),
+          }, object.npc),
         );
+        if (object.kind === "npc")
+          this.npcActors.push({ object, group: group.children[0] as T.Group });
         if (object.kind === "custom" && object.asset)
           this.loadModel(object.asset);
       }
-      if (object.role !== "none") {
+      if (object.role !== "none" || object.kind === "npc") {
         const bounds = new T.Box3().setFromObject(group.children[0]);
-        const label = labelSprite(object.name);
+        const label = labelSprite(object.kind === "npc" ? `${object.name} · TALK` : object.name);
         label.position.set(0, bounds.max.y + 0.65, 0);
         group.add(label);
       }
       this.objects.add(group);
     }
+    this.renderer.domElement.dataset.npcCount = String(world.objects.filter((o) => o.kind === "npc").length);
     this.resetVehicles();
     this.placePortal();
     if (this.playing) this.respawn();
@@ -910,6 +911,8 @@ export class WorldScene {
           Math.abs(Math.abs(lx) - 1.35) < 0.24 + 0.2 / o.scale[0] &&
           Math.abs(lz) < 0.28 + 0.2 / o.scale[2]
         );
+      if (o.kind === "garage" && !o.parts)
+        return Math.abs(lx) < 2.6 + 0.2 / o.scale[0] && Math.abs(lz) < 2.15 + 0.2 / o.scale[2];
       const radius = [
         "tree",
         "pine",
@@ -917,6 +920,7 @@ export class WorldScene {
         "lamp",
         "flag",
         "mailbox",
+        "npc",
       ].includes(o.kind)
         ? 0.35
         : [
@@ -1089,7 +1093,7 @@ export class WorldScene {
       let nearest: string | null = null,
         min = 4.5;
       for (const o of this.world?.objects ?? []) {
-        if (o.role === "none") continue;
+        if (o.role === "none" && o.kind !== "npc") continue;
         const vehicle = this.vehicles.get(o.id);
         const distance = Math.hypot(
           (vehicle?.x ?? o.position[0]) - p.x,
@@ -1105,6 +1109,8 @@ export class WorldScene {
         this.nearId = nearest;
         this.cb.near(nearest);
       }
+      this.renderer.domElement.dataset.nearNpc =
+        this.world?.objects.find((o) => o.id === nearest)?.kind === "npc" ? nearest! : "";
       this.updateVehicleHUD(now);
       if (!this.frozen && this.world) {
         const state = this.riding
@@ -1114,6 +1120,23 @@ export class WorldScene {
         this.driftEffects.tick(dt, state, this.world.terrain, object?.scale);
       }
     } else this.orbit.update();
+    if (this.playing && !this.frozen) {
+      for (const { object, group } of this.npcActors) {
+        if (object.npc?.motion === "still") continue;
+        const dx = this.player.position.x - object.position[0];
+        const dz = this.player.position.z - object.position[2];
+        const nearby = Math.hypot(dx, dz) < 12;
+        group.rotation.y = nearby
+          ? Math.atan2(dx, dz) - T.MathUtils.degToRad(object.rotation) : 0;
+        const angle = nearby ? 2.2 + Math.sin(now / 240) * 0.3 : 0;
+        for (const part of group.children) {
+          const offset = part.userData.waveOffset;
+          if (typeof offset !== "number") continue;
+          part.rotation.z = angle;
+          part.position.set(0.36 - offset * Math.sin(angle), 1.11 + offset * Math.cos(angle), 0);
+        }
+      }
+    }
     const center = this.playing ? this.player.position : this.orbit.target;
     // Keep the fixed-size particle/shadow budgets around the visitor, not the origin.
     if (this.atmosphere.object) this.atmosphere.object.position.copy(center);

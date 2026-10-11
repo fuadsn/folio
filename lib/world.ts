@@ -7,10 +7,17 @@ import {
 } from "./terrain";
 import { vehicleSchema, isVehicle } from "./vehicles";
 import { DRIVING_WORLD_SIZE, WORLD_POSITION_LIMIT } from "./world-size";
+import { npcSchema } from "./npc";
 
 export const ROLES = ["none", "about", "project", "resume", "contact"] as const;
 export type Role = (typeof ROLES)[number];
 export const CATALOG = [
+  { kind: "npc", name: "NPC guide", category: "People", color: "#d4621a", role: "none", description: "A friendly character with editable dialogue and portfolio links" },
+  { kind: "kiosk", name: "Project kiosk", category: "Objects", color: "#4d969e", role: "project", description: "An interactive display for a project or case study" },
+  { kind: "garage", name: "Workshop garage", category: "Buildings", color: "#d4621a", role: "project", description: "A workshop facade for your builds and experiments" },
+  { kind: "picnic", name: "Picnic table", category: "Objects", color: "#bc9073", role: "none", description: "Create a cafe terrace or meeting spot" },
+  { kind: "campfire", name: "Campfire", category: "Objects", color: "#f4ae52", role: "none", description: "A cozy fire and stone circle" },
+  { kind: "crate", name: "Supply crate", category: "Objects", color: "#a77c5e", role: "none", description: "Stock a workshop, campsite or harbor" },
   {
     kind: "driftcar",
     name: "Tokyo drift tuner",
@@ -275,6 +282,7 @@ export const objectSchema = z.object({
   details: objectDetailsSchema.default({}),
   collidable: z.boolean().default(true),
   vehicle: vehicleSchema.optional(),
+  npc: npcSchema.optional(),
   position: z.tuple([bounded, z.number().finite().min(0).max(15), bounded]),
   rotation: z.number().finite().min(-360).max(360),
   scale: z.tuple([
@@ -343,6 +351,7 @@ export function newObject(
     color: item?.color ?? "#b3a3d5",
     details: objectDetailsSchema.parse({}),
     collidable: !["flowers", "pond", "flag", "platform"].includes(kind),
+    ...(kind === "npc" ? { npc: npcSchema.parse({}) } : {}),
     ...(isVehicle(kind)
       ? {
           vehicle: vehicleSchema.parse(

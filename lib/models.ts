@@ -1,4 +1,5 @@
 import * as T from "three";
+import { npcSchema, type Npc } from "./npc";
 import {
   objectDetailsSchema,
   type Kind,
@@ -10,6 +11,7 @@ export function model(
   kind: Kind,
   color: string,
   details: ObjectDetails = objectDetailsSchema.parse({}),
+  npc: Npc = npcSchema.parse({}),
 ): T.Group {
   const cream = details.body ?? "#f2e8d6",
     dark = details.trim ?? "#354a4b",
@@ -86,6 +88,75 @@ export function model(
     sphere(0.36, "#668665", x, 0.46, z);
   };
   switch (kind) {
+    case "npc": {
+      box(0.5, 0.64, 0.35, color, 0, 0.91);
+      sphere(0.26, npc.skin, 0, 1.49);
+      for (const x of [-0.09, 0.09]) sphere(0.027, "#2a1a0e", x, 1.53, 0.23);
+      for (const x of [-0.14, 0.14]) {
+        box(0.19, 0.46, 0.22, dark, x, 0.37);
+        box(0.23, 0.15, 0.35, "#2a1a0e", x, 0.075, 0.05);
+      }
+      for (const x of [-0.36, 0.36]) {
+        const arm = box(0.16, 0.5, 0.2, color, x, 0.86);
+        const hand = sphere(0.105, npc.skin, x, 0.57);
+        if (x > 0) {
+          arm.userData.waveOffset = -0.25;
+          hand.userData.waveOffset = -0.54;
+        }
+      }
+      if (npc.hatStyle !== "none") {
+        cyl(0.23, 0.28, 0.22, npc.hat, 0, 1.74, 0, 12);
+        if (npc.hatStyle === "cap") box(0.4, 0.05, 0.24, npc.hat, 0, 1.65, 0.23);
+        else sphere(0.09, npc.hat, 0, 1.91);
+      }
+      break;
+    }
+    case "kiosk": {
+      box(1.4, 0.15, 0.9, dark, 0, 0.075);
+      box(0.3, 1.05, 0.35, color, 0, 0.6);
+      box(1.8, 1.2, 0.22, color, 0, 1.6);
+      box(1.56, 0.97, 0.03, "#243f46", 0, 1.6, 0.13);
+      box(0.5, 0.58, 0.03, "#f4ae52", -0.41, 1.65, 0.16);
+      for (let i = 0; i < 3; i++) box(0.65 - i * 0.1, 0.06, 0.03, cream, 0.27, 1.86 - i * 0.21, 0.16);
+      box(0.48, 0.1, 0.03, "#87c6b0", 0.22, 1.28, 0.16);
+      break;
+    }
+    case "garage": {
+      box(5.4, 0.18, 4.4, dark, 0, 0.09);
+      box(5, 2.8, 4, cream, 0, 1.58);
+      box(5.5, 0.25, 4.5, color, 0, 3.1);
+      box(3.7, 2.25, 0.08, dark, 0, 1.34, 2.04);
+      for (let i = 0; i < 7; i++) box(3.5, 0.2, 0.08, "#829190", 0, 0.44 + i * 0.27, 2.1);
+      box(2.3, 0.3, 0.12, color, 0, 2.73, 2.09);
+      for (const x of [-2.25, 2.25]) box(0.18, 0.42, 0.15, "#f4ae52", x, 2.4, 2.09);
+      break;
+    }
+    case "picnic": {
+      box(2.4, 0.14, 1.1, color, 0, 0.95);
+      for (const z of [-0.9, 0.9]) box(2.5, 0.12, 0.35, color, 0, 0.52, z);
+      for (const x of [-0.8, 0.8]) {
+        for (const z of [-0.75, 0.75]) box(0.13, 0.48, 0.13, dark, x, 0.24, z);
+        box(0.16, 0.85, 0.16, dark, x, 0.44);
+      }
+      break;
+    }
+    case "campfire": {
+      for (let i = 0; i < 8; i++) {
+        const a = i * Math.PI / 4;
+        sphere(0.2, "#827e74", Math.cos(a) * 0.7, 0.2, Math.sin(a) * 0.7);
+      }
+      box(0.25, 0.2, 1.1, wood, 0, 0.2).rotation.y = 0.65;
+      box(0.25, 0.2, 1.1, wood, 0, 0.32).rotation.y = -0.65;
+      cyl(0, 0.35, 0.85, "#d4621a", 0, 0.7, 0, 6);
+      cyl(0, 0.22, 0.65, color, 0, 0.67, 0.1, 5);
+      break;
+    }
+    case "crate": {
+      box(1.1, 1.1, 1.1, color, 0, 0.55);
+      for (const x of [-0.43, 0.43]) box(0.12, 1.16, 1.16, wood, x, 0.58);
+      for (const y of [0.12, 1.02]) box(1.16, 0.12, 1.16, dark, 0, y);
+      break;
+    }
     case "driftcar": {
       const trim = details.trim ?? "#292323",
         glass = "#47636a",
@@ -434,8 +505,9 @@ export function modelParts(
   kind: Kind,
   color: string,
   details: ObjectDetails,
+  npc?: Npc,
 ): Blueprint["parts"] {
-  const group = model(kind, color, details);
+  const group = model(kind, color, details, npc);
   const parts: Blueprint["parts"] = [];
   group.children.forEach((child, index) => {
     if (!(child instanceof T.Mesh)) return;

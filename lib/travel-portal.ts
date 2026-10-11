@@ -15,6 +15,11 @@ export function portalPosition(
       const z = sz + Math.sin((i * Math.PI) / 8) * radius;
       if (
         isLand(world.terrain, x, z, 1.5) &&
+        // Small NPC bodies can fit between the cardinal collision probes below.
+        // Leave room for the ring and its large label, not just the NPC's feet.
+        !world.objects.some((o) => o.kind === "npc" &&
+          Math.hypot(o.position[0] - x, o.position[2] - z) <
+            5 + Math.max(o.scale[0], o.scale[2]) * 0.8) &&
         [
           [0, 0],
           [1.5, 0],

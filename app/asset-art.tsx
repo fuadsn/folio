@@ -12,7 +12,49 @@ export default function AssetArt({
   return (
     <svg viewBox="0 0 120 95" fill="none" aria-hidden="true">
       <ellipse cx="60" cy="81" rx="35" ry="8" fill="#263730" opacity=".08" />
-      {kind === "driftcar" ? (
+      {kind === "npc" ? (
+        <>
+          <path d="M49 61v19m22-19v19" stroke="#4e4036" strokeWidth="9" />
+          <rect x="43" y="37" width="35" height="29" rx="8" fill={color} />
+          <path d="m46 42-13 16m42-16 13-14" stroke={color} strokeWidth="10" strokeLinecap="round" />
+          <circle cx="60" cy="26" r="13" fill="#d6a078" />
+          <path d="M45 24a15 15 0 0 1 30 0Z" fill="#f4ae52" />
+          <circle cx="56" cy="28" r="2" fill="#2a1a0e" /><circle cx="65" cy="28" r="2" fill="#2a1a0e" />
+        </>
+      ) : kind === "kiosk" ? (
+        <>
+          <path d="M60 60v22" stroke={color} strokeWidth="9" />
+          <rect x="25" y="15" width="70" height="48" rx="5" fill={color} />
+          <rect x="31" y="21" width="58" height="35" fill="#243f46" />
+          <rect x="36" y="26" width="19" height="24" fill="#f4ae52" />
+          <path d="M63 29h19m-19 8h16m-16 8h11M45 82h30" stroke="#fef3e2" strokeWidth="4" />
+        </>
+      ) : kind === "campfire" ? (
+        <>
+          <ellipse cx="60" cy="75" rx="30" ry="10" fill="#827e74" />
+          <path d="m39 72 42-8m-40 0 38 12" stroke="#a77c5e" strokeWidth="10" />
+          <path d="M57 18c10 25 35 35 19 48-23 21-49-8-29-25l7 13c7-10-1-21 3-36Z" fill="#d4621a" />
+          <path d="M61 43c14 15 15 28-1 28-15 0-9-13 1-28Z" fill={color} />
+        </>
+      ) : kind === "picnic" ? (
+        <>
+          <path d="m25 47 48-16 26 16-48 17Z" fill={color} />
+          <path d="m22 67 24 12 53-18m-59-2v21m43-35v29" stroke="#4e4036" strokeWidth="5" />
+          <path d="m16 61 25 13 52-17" stroke={color} strokeWidth="8" />
+        </>
+      ) : kind === "crate" ? (
+        <>
+          <path d="m28 32 32-14 33 15v40L59 87 28 71Z" fill={color} />
+          <path d="m28 32 31 15 34-14M59 47v40M36 39v34m48-32v34m-56-8 31 15 34-14" stroke="#4e4036" strokeWidth="5" />
+        </>
+      ) : kind === "garage" ? (
+        <>
+          <path d="m17 33 44-17 43 17v45l-44 13-43-17Z" fill="#fef3e2" />
+          <path d="m13 29 48-19 48 19-49 18Z" fill={color} />
+          <path d="m65 51 32-10v30L65 81Z" fill="#829190" />
+          <path d="m67 57 27-8m-27 17 27-8m-27 17 27-8" stroke="#354a4b" strokeWidth="3" />
+        </>
+      ) : kind === "driftcar" ? (
         <>
           <path d="m15 61 32-24 38-8 22 24-8 19-57 17-27-13Z" fill={color} />
           <path d="m47 38 25-6 17 16-30 10Z" fill="#292323" />

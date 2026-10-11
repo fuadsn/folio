@@ -24,6 +24,8 @@ export default function ObjectDetailsEditor({
             "driftcar",
             "boat",
             "plane",
+            "garage",
+            "kiosk",
           ].includes(object.kind)
         ? ["body", "trim"]
         : object.kind === "arch"
@@ -34,7 +36,7 @@ export default function ObjectDetailsEditor({
               ? ["trim", "wood"]
               : object.kind === "flag"
                 ? ["wood"]
-                : ["bench", "lamp"].includes(object.kind)
+                : ["bench", "lamp", "picnic", "crate"].includes(object.kind)
                   ? ["trim"]
                   : [];
   return (

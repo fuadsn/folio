@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { starterWorld, newObject } from "../lib/world";
+import { starterWorld, newObject, CATALOG } from "../lib/world";
 
 test("studio renders its world without client errors", async ({ page }) => {
   const errors: string[] = [];
@@ -10,7 +10,7 @@ test("studio renders its world without client errors", async ({ page }) => {
   ).toBeVisible();
   await expect(page.locator("canvas")).toBeVisible();
   await expect(
-    page.locator(".library-subhead").getByText("25 objects", { exact: true }),
+    page.locator(".library-subhead").getByText(`${CATALOG.length} objects`, { exact: true }),
   ).toBeVisible();
   await page.screenshot({ path: "test-results/studio-desktop.png" });
   expect(errors).toEqual([]);
