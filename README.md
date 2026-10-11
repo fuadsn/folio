@@ -68,6 +68,18 @@ Playable worlds have a glowing **World Portal** on free dry ground near the spaw
 
 This connects portfolios on the **same application server**, not unrelated websites or GitHub repositories. Local sign-in still represents one account, so the working local directory will show only portfolios actually published and opted in there. Automated tests seed two explicitly synthetic creators into their isolated database to verify cross-world travel; those fixtures are never added to your working world. Shared hosting with real authentication is required for multiple people to publish from different devices. This is portal navigation between portfolios, not synchronized multiplayer or one seamless continuous map. No hosting deployment is included in the GitHub push.
 
+### Optional local sample worlds
+
+After initializing the local database, run `npm run seed:worlds`. Open http://127.0.0.1:5173/discover or **Worlds** to visit three original, explicitly fictional demo portfolios:
+
+- **Dune Circuit · Demo** — sunset dunes, a drift tuner, loop roads and game-design stories.
+- **Aurora Outpost · Demo** — snowy night terrain, a rover, a survey plane and creative-technology stories.
+- **Tide Studio · Demo** — a sunny palm-lined design island, a cruiser and a motor boat in a navigable harbor channel.
+
+Each is 256 × 256 m, has the four essential portfolio sections, a car beside spawn, a survey plane on the west runway and a world portal. Press **F** beside the car to drive; **P** opens the directory. The samples use only built-in geometry; no API key, external model, music download or real person's information is needed. The harbor boat faces east toward open ocean.
+
+The seed command is **local-only and insert-only**: it neither replaces your world nor publishes your draft, and reruns leave existing samples unchanged. It uses three reserved demo owners, separate from the one mock local account; the samples are visitor destinations, not additional signed-in users or editable drafts for your account. They are never substituted for failed/empty API responses. No automatic seeding or hosting deployment occurs. For an isolated initialized test state, `npm run seed:worlds -- --persist-to /absolute/path/to/local-state` uses the same local-only behavior. The test suite includes its own copies in the temporary port-5174 database.
+
 ## Connect AI locally
 
 Copy `.dev.vars.example` to `.dev.vars`, then fill **one** provider's key locally. Never paste a secret into chat or put it in browser code. Restart the dev server after changing configuration.

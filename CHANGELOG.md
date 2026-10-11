@@ -4,6 +4,14 @@ Record each meaningful project change during the event, newest first. Update thi
 
 ## Event build log
 
+## 2026-10-11T09:37:22+05:30 — Local sample portfolio worlds
+
+- Changed: Added three original fictional 256 × 256 m portfolios: Dune Circuit (desert/drifting), Aurora Outpost (snow/night) and Tide Studio (tropical harbor). Each includes real in-app story content, a spawn car, a survey plane, a loop road and portal navigation. Added `npm run seed:worlds`, shared deterministic sample data, isolated regression coverage and local demo instructions.
+- Why: Give the local portfolio network useful destinations without posing samples as real people or replacing the creator's world.
+- Validation: Typecheck, all 38 regression tests and build passed; desktop/mobile sample screenshots inspected. Seeded three records on localhost and verified all three listings/pages. Compared complete existing-world row hashes before/after; the original draft, revision and publication were unchanged. Re-ran the seed and verified all four rows remained byte-for-byte identical. Invalid/remote seed arguments were rejected before database access.
+- Corrections: Reused one JSON literal per insert to remain below D1's statement-size limit. Corrected an invalid JSON test fixture and made browser search wait for client-loaded cards before typing.
+- Limitations: Local-only, fictional samples, not additional authenticated users. Insert-only reruns do not reset edited samples. Travel still changes worlds through the directory, without carrying vehicles or providing live multiplayer. No hosting deployment.
+
 ## 2026-10-11T09:11:29+05:30 — Larger driving worlds
 
 - Changed: Added 256 × 256 m new worlds, an undoable expansion control, a 512 × 512 m maximum, adaptive terrain grids and wider loop roads. Expanded object/spawn/vehicle limits, camera and ocean bounds; weather and nearby shadows follow the explorer. Added the user's preference to commit completed, tested changes to `AGENTS.md`.

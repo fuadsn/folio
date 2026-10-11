@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { networkSeedSQL } from "../tests/fixtures/network.mjs";
+import { demoSeedSQL } from "./demo-worlds.mjs";
 const state = mkdtempSync(join(tmpdir(), "worldfolio-test-"));
 const config = join(state, "wrangler.json");
 const initSQL = join(state, "init.sql");
@@ -11,7 +12,7 @@ writeFileSync(
   initSQL,
   readFileSync("drizzle/0000_fuzzy_celestials.sql", "utf8") +
     "\n" +
-    networkSeedSQL(),
+    networkSeedSQL() + "\n" + demoSeedSQL(),
 );
 writeFileSync(
   config,

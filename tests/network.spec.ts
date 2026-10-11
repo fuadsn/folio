@@ -8,6 +8,7 @@ import {
   worldCardSchema,
 } from "../lib/directory";
 import { networkFixtures, networkSeedSQL } from "./fixtures/network.mjs";
+import { demoWorlds } from "../scripts/demo-worlds.mjs";
 import { starterWorld, worldSchema } from "../lib/world";
 import { portalPosition } from "../lib/travel-portal";
 import { isLand } from "../lib/vehicles";
@@ -99,7 +100,7 @@ test("anonymous visitors discover and travel between creators, with keyboard and
   await page.getByLabel("Search portfolios").fill("mira");
   await expect(page.locator(".world-card")).toHaveCount(1);
   await page.getByLabel("Search portfolios").fill("");
-  await expect(page.locator(".world-card")).toHaveCount(2);
+  await expect(page.locator(".world-card")).toHaveCount(2 + demoWorlds.length);
   await page.screenshot({ path: "test-results/world-network.png" });
   await page.getByRole("link", { name: "Travel to Luna Lab" }).click();
   await expect(page).toHaveURL(new RegExp(`/w/${networkFixtures[0].id}$`));
@@ -258,7 +259,7 @@ test("directory handles empty results, failures and retry without inventing worl
   await expect(page.getByRole("alert")).toContainText("Could not load");
   await page.unroute("**/api/worlds?**");
   await page.getByRole("button", { name: "Try again" }).click();
-  await expect(page.locator(".world-card")).toHaveCount(2);
+  await expect(page.locator(".world-card")).toHaveCount(2 + demoWorlds.length);
   await page.getByLabel("Search portfolios").fill("no-such-test-world");
   await expect(page.getByText("No worlds match yet.")).toBeVisible();
   expect((await request.get(`/w/${networkFixtures[3].id}`)).status()).toBe(404);

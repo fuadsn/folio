@@ -7,7 +7,7 @@ This is a source-code and local-demo handoff, not confirmation of an organizer s
 - **Project name:** Worldfolio Studio
 - **Description:** A browser-based 3D portfolio builder. Creators sculpt terrain, edit buildings and stories, and publish playable worlds with characters and drivable vehicles. An opt-in network lets visitors discover and travel between published portfolios.
 - **Code repository:** https://github.com/fuadsn/folio
-- **Earlier network checkpoint:** `25457af7ad3379e9752c24c5096c525d8215a105` (30 tests, typecheck and build passed). The current `main` branch also includes the larger-driving-world milestone documented in CHANGELOG. No formal final submission has been made by Codex.
+- **Earlier network checkpoint:** `25457af7ad3379e9752c24c5096c525d8215a105` (30 tests, typecheck and build passed). Subsequent milestones include larger driving worlds and optional local demo portfolios, documented in CHANGELOG. No formal final submission has been made by Codex.
 - **Working demo:** Local only: http://127.0.0.1:5173. No public hosting deployment is included in this handoff.
 - **Access:** Node 22.13+, npm, a browser with WebGL. Local sign-in simulates one account and must not be exposed as production authentication.
 
@@ -24,11 +24,11 @@ Follow the fresh-clone installation and database commands in [README.md](README.
 3. Add a Tokyo drift tuner from Build → Vehicles. Test drive with W/A/S/D, Space to drift, B to brake; drive off-road. Boats and planes are also available.
 4. Add the four required portfolio stories. In Publish, enable **Join the world network** and publish a snapshot.
 5. Open **Worlds** or `/discover`; enter a listed portfolio. Click its glowing portal or press P to browse another destination. Only opted-in portfolios published on this same server appear.
-6. Use `npm test -- tests/network.spec.ts` to exercise two synthetic creators on the isolated test server; no demo creators are inserted into your working database.
+6. Run `npm run seed:worlds` to add three clearly labeled fictional sample portfolios to the local directory without changing your draft. Visit Dune Circuit, Aurora Outpost and Tide Studio; press F beside each spawn car, then P to choose another world. Use `npm test -- tests/demo-worlds.spec.ts tests/network.spec.ts` for isolated sample/network checks. Test runs never seed your working database.
 
 **Environment:** No API keys are needed for the editor, terrain, vehicles or networking. Optional `GEMINI_API_KEY` or `OPENAI_API_KEY` enables procedural building generation; see `.dev.vars.example`. Optional Stripe test variables are documented in README; no real payment was made or verified.
 
-**Checks:** The full 34-test regression run passed. After adjusting the large-world backup cap, five focused large-world tests, typecheck and build passed again. Desktop/mobile network and large-world screenshots were visually inspected. The build reports a large-client-chunk warning and a Vinext classification warning for `/discover`, but succeeds.
+**Checks:** All 38 regression tests, typecheck and build passed after adding the local sample worlds. Desktop/mobile network, sample worlds and large-world screenshots were visually inspected. Local seeding preserved the original world row exactly; a second seed left all four rows unchanged. The build reports a large-client-chunk warning and a Vinext classification warning for `/discover`, but succeeds.
 
 **Known limitations:** Local only; one mock local account. Real multi-user access requires a shared deployment and production authentication. World travel is page/portal navigation, not live multiplayer or a seamless map. Cars and audio stay in their originating world. AI/provider billing and payment integrations are not live-tested. The previous private Sites copy is not confirmed removed. Spotify controls depend on the service's playback availability; commercial audio is not bundled.
 
