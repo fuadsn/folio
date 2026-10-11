@@ -7,7 +7,7 @@ This is a source-code and local-demo handoff, not confirmation of an organizer s
 - **Project name:** Worldfolio Studio
 - **Description:** A browser-based 3D portfolio builder. Creators sculpt terrain, edit buildings and stories, and publish playable worlds with characters and drivable vehicles. An opt-in network lets visitors discover and travel between published portfolios.
 - **Code repository:** https://github.com/fuadsn/folio
-- **Implementation checkpoint:** Recorded after the checked implementation commit is created. No formal final submission has been made by Codex.
+- **Implementation checkpoint:** `25457af7ad3379e9752c24c5096c525d8215a105` (all 30 tests, typecheck and build passed). Subsequent event-history merge/documentation changes do not change application code. No formal final submission has been made by Codex.
 - **Working demo:** Local only: http://127.0.0.1:5173. No public hosting deployment is included in this handoff.
 - **Access:** Node 22.13+, npm, a browser with WebGL. Local sign-in simulates one account and must not be exposed as production authentication.
 

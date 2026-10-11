@@ -67,3 +67,11 @@ next-env.d.ts
 /.codex/
 /outputs/
 /work/
+
+# Additional event-template ignores for nested tooling.
+node_modules/
+.next/
+dist/
+coverage/
+!.env.example
+!.env.*.example
